@@ -1,5 +1,5 @@
 [build]
-  # Install root deps (for functions, e.g., "openai"), then frontend deps, then build
+  # Install root deps (functions) then frontend deps, then build
   command   = "npm install && npm install --prefix frontend && npm run build --prefix frontend"
   publish   = "frontend/dist"
   functions = "netlify/functions"
@@ -11,5 +11,4 @@
 
 [functions]
   node_bundler  = "esbuild"
-  # Ensure resume.json is copied into the function bundle at deploy time
   included_files = ["frontend/src/data/resume.json"]
