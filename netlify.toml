@@ -1,8 +1,8 @@
 [build]
-  base = "frontend"
-  command = "npm install && npm run build"
-  publish = "dist"
-  functions = "../netlify/functions"   # <— tell Netlify where your functions are
+  # Build the frontend without using "base" so paths are unambiguous
+  command  = "npm install --prefix frontend && npm run build --prefix frontend"
+  publish  = "frontend/dist"
+  functions = "netlify/functions"   # functions folder at repo root
 
 [[redirects]]
   from = "/api/*"
@@ -11,4 +11,3 @@
 
 [functions]
   node_bundler = "esbuild"
-
