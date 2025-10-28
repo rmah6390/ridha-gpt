@@ -1,7 +1,5 @@
-// netlify/functions/_shared/rag.js  (ESM version)
 import fs from "fs/promises";
 import path from "path";
-import { fileURLToPath } from "url";
 import OpenAI from "openai";
 
 export const SYSTEM_PROMPT =
@@ -9,9 +7,8 @@ export const SYSTEM_PROMPT =
   `Always respond in complete sentences. If the resume does not contain the answer, say: ` +
   `"I cannot confirm this from my resume."`;
 
-// --- locate resume.json reliably in ESM ---
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const resumePath = path.resolve(__dirname, "../../../frontend/src/data/resume.json");
+// Load resume.json via a stable path at runtime
+const resumePath = path.join(process.cwd(), "frontend", "src", "data", "resume.json");
 
 // lazy-load + cache
 let _resumeData;
