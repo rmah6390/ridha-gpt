@@ -1,6 +1,6 @@
 const { SYSTEM_PROMPT, openai, buildContext } = require('./_shared/rag');
 
-exports.handler = async function handler(event) {
+export const handler = async (event) => {
   if (event.httpMethod !== 'GET') {
     return {
       statusCode: 405,
