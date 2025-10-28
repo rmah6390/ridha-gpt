@@ -1,8 +1,8 @@
 [build]
-  # Install root deps (functions) then frontend deps, then build
-  command   = "npm install && npm install --prefix frontend && npm run build --prefix frontend"
-  publish   = "frontend/dist"
-  functions = "netlify/functions"
+  base = "frontend"
+  command = "npm install && npm run build"   # run in /frontend (no --prefix)
+  publish = "dist"
+  functions = "../netlify/functions"         # functions live one level up (repo root)
 
 [[redirects]]
   from = "/api/*"
