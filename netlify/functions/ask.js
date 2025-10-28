@@ -1,6 +1,5 @@
 // netlify/functions/ask.js  (hybrid: personal + general Q&A)
 import { SYSTEM_PROMPT, openai, buildContext } from "./_shared/rag.js";
-
 export const handler = async (event) => {
   try {
     if (event.httpMethod !== "POST") {
