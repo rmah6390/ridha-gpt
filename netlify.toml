@@ -2,11 +2,13 @@
   base = "frontend"
   command = "npm install && npm run build"
   publish = "dist"
+  functions = "../netlify/functions"   # <— tell Netlify where your functions are
 
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  to   = "/.netlify/functions/:splat"
   status = 200
 
 [functions]
   node_bundler = "esbuild"
+
