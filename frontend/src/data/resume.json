@@ -1,0 +1,69 @@
+{
+  "name": "Ridha Rahman",
+  "headline": "Full-stack engineer focused on human-centered AI products",
+  "summary": "Experienced software engineer specializing in building conversational AI assistants and data-driven web applications that help teams work faster.",
+  "skills": [
+    {
+      "category": "Strongest Technical Skills",
+      "details": "Expertise in JavaScript, React, Node.js, Python, and building retrieval-augmented generation systems with OpenAI APIs."
+    },
+    {
+      "category": "Cloud & DevOps",
+      "details": "Skilled with Netlify, AWS Lambda, Docker, PostgreSQL, and CI/CD automation."
+    },
+    {
+      "category": "Collaboration",
+      "details": "Comfortable leading cross-functional squads, mentoring engineers, and working directly with stakeholders."
+    }
+  ],
+  "experience": [
+    {
+      "company": "Aurora Analytics",
+      "role": "Senior Software Engineer",
+      "period": "2022 – Present",
+      "location": "Remote",
+      "bullets": [
+        "Designed and shipped a customer support copilot that routes tickets through a Retrieval-Augmented Generation pipeline, reducing average response time by 37%.",
+        "Built end-to-end analytics dashboards in React and D3 that surface customer insights used by 200+ enterprise clients.",
+        "Led a modernization effort that migrated a monolithic Node.js service into serverless functions running on Netlify and AWS Lambda."
+      ]
+    },
+    {
+      "company": "Nimbus Labs",
+      "role": "Software Engineer",
+      "period": "2018 – 2022",
+      "location": "San Francisco, CA",
+      "bullets": [
+        "Implemented streaming chat interfaces in React for knowledge-base assistants supporting 10k daily active users.",
+        "Developed embedding pipelines that index product documentation and enable semantic search across 50k articles.",
+        "Collaborated with product and design to launch an onboarding assistant that increased trial-to-paid conversions by 14%."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "OpenHelp",
+      "description": "An open-source starter kit for building AI help centers.",
+      "highlights": [
+        "Provides Netlify Functions for secure OpenAI access and caching.",
+        "Includes a React front-end with Tailwind CSS for customizable chat experiences."
+      ]
+    },
+    {
+      "name": "PulseBridge",
+      "description": "Healthcare analytics product that unifies EHR data into actionable insights for clinicians.",
+      "highlights": [
+        "Implemented HIPAA-compliant data pipelines and React dashboards for hospital administrators.",
+        "Created proactive alerting workflows that notify care teams about anomalies in near real-time."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "University of Washington",
+      "degree": "B.S. in Computer Science",
+      "period": "2014 – 2018",
+      "details": "Research assistant in the interactive intelligence lab focusing on conversational agents."
+    }
+  ]
+}
