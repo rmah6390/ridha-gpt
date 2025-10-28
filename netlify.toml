@@ -1,8 +1,5 @@
 [build]
   base = "frontend"
-  command = "npm ci && npm run build"
+- command = "npm ci && npm run build"
++ command = "npm install && npm run build"
   publish = "dist"
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
