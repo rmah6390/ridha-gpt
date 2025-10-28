@@ -1,5 +1,1 @@
-{
-  "type": "module",
-  "dependencies": { "openai": "^4.58.0" }
-}
-
+{ "type": "module", "dependencies": { "openai": "^4.58.0" } }
