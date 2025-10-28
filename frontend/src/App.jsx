@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ask, getSuggestions } from './lib/api.js';
 
-const initialGreeting = "Hi, I'm Ridha-GPT. Ask me anything about my résumé, and I'll answer based on the details I have.";
+const initialGreeting = "Hi, I'm Ridha-GPT. Ask me anything about my resume, and I'll answer based on the details I have.";
 
 function MessageBubble({ role, content }) {
   const isUser = role === 'user';
@@ -109,9 +109,9 @@ export default function App() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="border-b border-white/5 bg-surface/60 px-6 py-5 backdrop-blur">
         <div className="mx-auto flex w-full max-w-4xl flex-col gap-2 text-center">
-          <h1 className="text-2xl font-semibold text-white">Ridha-GPT — your résumé assistant</h1>
+          <h1 className="text-2xl font-semibold text-white">Ridha-GPT — A Personal AI Assistant</h1>
           <p className="text-sm text-purple-200/80">
-            Built to answer questions about Ridha&apos;s experience using only the résumé data.
+            Built to answer questions about Ridha&apos;s experience using only the resume data.
           </p>
         </div>
       </header>
