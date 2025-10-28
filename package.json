@@ -1,8 +1,5 @@
 {
-  "name": "ridha-gpt",
-  "private": true,
-  "version": "0.0.1",
-  "dependencies": {
-    "openai": "^4.57.0"
-  }
+  "type": "module",
+  "dependencies": { "openai": "^4.58.0" }
 }
+
