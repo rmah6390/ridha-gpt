@@ -1,152 +1,138 @@
-const fs = require('fs');
-const path = require('path');
-const { OpenAI } = require('openai');
+// netlify/functions/_shared/rag.js  (ESM version)
+import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
+import OpenAI from "openai";
 
-const SYSTEM_PROMPT = `You are Ridha-GPT, a personal assistant that answers only using the provided resume context. Always respond in complete sentences. If the resume does not contain the answer, say: "I cannot confirm this from my resume."`;
+export const SYSTEM_PROMPT =
+  `You are Ridha-GPT, a personal assistant that answers only using the provided resume context. ` +
+  `Always respond in complete sentences. If the resume does not contain the answer, say: ` +
+  `"I cannot confirm this from my resume."`;
 
-const resumePath = path.resolve(__dirname, '../../../frontend/src/data/resume.json');
-const resumeData = JSON.parse(fs.readFileSync(resumePath, 'utf-8'));
+// --- locate resume.json reliably in ESM ---
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const resumePath = path.resolve(__dirname, "../../../frontend/src/data/resume.json");
 
+// lazy-load + cache
+let _resumeData;
+async function getResume() {
+  if (_resumeData) return _resumeData;
+  const raw = await fs.readFile(resumePath, "utf-8");
+  _resumeData = JSON.parse(raw);
+  return _resumeData;
+}
+
+// tolerant chunker: handles both your current schema and earlier variants
 function chunkResume(data) {
   const chunks = [];
-  if (data.summary) {
-    chunks.push({ id: 'summary', text: `Summary: ${data.summary}` });
+
+  if (data.summary) chunks.push({ id: "summary", text: `Summary: ${data.summary}` });
+
+  // skills (supports either "technical_skills.programming_languages" or flat "skills")
+  const skills =
+    data.technical_skills?.programming_languages ??
+    data.skills ??
+    [];
+  if (Array.isArray(skills) && skills.length) {
+    chunks.push({ id: "skills", text: `Skills: ${skills.join(", ")}` });
   }
 
-  if (Array.isArray(data.skills)) {
-    data.skills.forEach((skill, index) => {
-      if (skill.category || skill.details) {
-        chunks.push({
-          id: `skill-${index}`,
-          text: `${skill.category ? `${skill.category}: ` : ''}${skill.details ?? ''}`.trim(),
-        });
-      }
-    });
-  }
-
+  // experience
   if (Array.isArray(data.experience)) {
-    data.experience.forEach((job, jobIndex) => {
-      const base = [`Experience: ${job.role ?? ''} at ${job.company ?? ''}`.trim()];
-      if (job.period || job.location) {
-        base.push([job.period, job.location].filter(Boolean).join(' — '));
-      }
-      const header = base.filter(Boolean).join('\n');
-      if (Array.isArray(job.bullets)) {
-        job.bullets.forEach((bullet, bulletIndex) => {
-          chunks.push({
-            id: `experience-${jobIndex}-${bulletIndex}`,
-            text: `${header}\n• ${bullet}`.trim(),
-          });
-        });
+    data.experience.forEach((job, i) => {
+      const header = [
+        `Experience: ${job.role ?? ""} at ${job.company ?? ""}`.trim(),
+        [job.start, job.end].filter(Boolean).join(" – "),
+        job.location
+      ].filter(Boolean).join("\n");
+
+      if (Array.isArray(job.bullets) && job.bullets.length) {
+        job.bullets.forEach((b, j) =>
+          chunks.push({ id: `exp-${i}-${j}`, text: `${header}\n• ${b}`.trim() })
+        );
       } else if (header) {
-        chunks.push({
-          id: `experience-${jobIndex}`,
-          text: header,
-        });
+        chunks.push({ id: `exp-${i}`, text: header });
       }
     });
   }
 
+  // projects (supports {name, details[]} or {name, desc})
   if (Array.isArray(data.projects)) {
-    data.projects.forEach((project, projectIndex) => {
-      const base = [`Project: ${project.name ?? ''}`.trim()];
-      if (project.description) {
-        base.push(project.description);
-      }
-      if (Array.isArray(project.highlights) && project.highlights.length > 0) {
-        project.highlights.forEach((highlight, highlightIndex) => {
-          chunks.push({
-            id: `project-${projectIndex}-${highlightIndex}`,
-            text: `${base.join('\n')}\n• ${highlight}`.trim(),
-          });
-        });
+    data.projects.forEach((p, i) => {
+      const base = [`Project: ${p.name ?? ""}`.trim()];
+      if (p.desc) base.push(p.desc);
+      if (Array.isArray(p.details) && p.details.length) {
+        p.details.forEach((d, j) =>
+          chunks.push({ id: `proj-${i}-${j}`, text: `${base.join("\n")}\n• ${d}`.trim() })
+        );
+      } else if (Array.isArray(p.highlights) && p.highlights.length) {
+        p.highlights.forEach((d, j) =>
+          chunks.push({ id: `proj-${i}-${j}`, text: `${base.join("\n")}\n• ${d}`.trim() })
+        );
       } else {
-        chunks.push({
-          id: `project-${projectIndex}`,
-          text: base.join('\n'),
-        });
+        chunks.push({ id: `proj-${i}`, text: base.join("\n") });
       }
     });
   }
 
+  // education (supports {degree, school, year|expected_graduation})
   if (Array.isArray(data.education)) {
-    data.education.forEach((edu, eduIndex) => {
-      const parts = [
-        `Education: ${edu.institution ?? ''}`.trim(),
-        edu.degree,
-        edu.period,
-        edu.details,
-      ].filter(Boolean);
-      if (parts.length) {
-        chunks.push({
-          id: `education-${eduIndex}`,
-          text: parts.join('\n'),
-        });
-      }
+    data.education.forEach((e, i) => {
+      const line = [
+        `Education: ${e.degree ?? ""}`.trim(),
+        e.school,
+        e.expected_graduation ?? e.year
+      ].filter(Boolean).join(" — ");
+      if (line) chunks.push({ id: `edu-${i}`, text: line });
     });
   }
 
   return chunks;
 }
 
+// cosine similarity
 function cosineSimilarity(a, b) {
-  const dot = a.reduce((sum, value, index) => sum + value * b[index], 0);
-  const magnitudeA = Math.sqrt(a.reduce((sum, value) => sum + value * value, 0));
-  const magnitudeB = Math.sqrt(b.reduce((sum, value) => sum + value * value, 0));
-  if (!magnitudeA || !magnitudeB) return 0;
-  return dot / (magnitudeA * magnitudeB);
+  const dot = a.reduce((s, v, i) => s + v * b[i], 0);
+  const magA = Math.sqrt(a.reduce((s, v) => s + v * v, 0));
+  const magB = Math.sqrt(b.reduce((s, v) => s + v * v, 0));
+  return magA && magB ? dot / (magA * magB) : 0;
 }
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const chunks = chunkResume(resumeData);
-let preparedEmbeddingsPromise = null;
+export const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+let _embeddedChunksPromise;
 async function ensureEmbeddings() {
-  if (preparedEmbeddingsPromise) {
-    return preparedEmbeddingsPromise;
-  }
+  if (_embeddedChunksPromise) return _embeddedChunksPromise;
+  if (!process.env.OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY");
 
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('Missing OPENAI_API_KEY environment variable.');
-  }
-
-  preparedEmbeddingsPromise = (async () => {
-    const embeddingResponse = await openai.embeddings.create({
-      model: 'text-embedding-3-small',
-      input: chunks.map((chunk) => chunk.text),
+  _embeddedChunksPromise = (async () => {
+    const resume = await getResume();
+    const chunks = chunkResume(resume);
+    const { data } = await openai.embeddings.create({
+      model: "text-embedding-3-small",
+      input: chunks.map(c => c.text)
     });
-
-    return chunks.map((chunk, index) => ({
-      ...chunk,
-      embedding: embeddingResponse.data[index].embedding,
-    }));
+    return chunks.map((c, i) => ({ ...c, embedding: data[i].embedding }));
   })();
 
-  return preparedEmbeddingsPromise;
+  return _embeddedChunksPromise;
 }
 
-async function buildContext(question, topK = 6) {
-  const embeddedChunks = await ensureEmbeddings();
-  const queryEmbeddingResponse = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
-    input: question,
+export async function buildContext(question, topK = 6) {
+  const embedded = await ensureEmbeddings();
+  const { data } = await openai.embeddings.create({
+    model: "text-embedding-3-small",
+    input: question
   });
+  const q = data[0].embedding;
 
-  const queryVector = queryEmbeddingResponse.data[0].embedding;
-  const scoredChunks = embeddedChunks
-    .map((chunk) => ({
-      ...chunk,
-      score: cosineSimilarity(queryVector, chunk.embedding),
-    }))
+  const scored = embedded
+    .map(c => ({ ...c, score: cosineSimilarity(q, c.embedding) }))
     .sort((a, b) => b.score - a.score)
     .slice(0, topK);
 
-  const context = scoredChunks.map((chunk) => `- ${chunk.text}`).join('\n');
-  return { context, scoredChunks };
+  return {
+    context: scored.map(c => `- ${c.text}`).join("\n"),
+    scoredChunks: scored
+  };
 }
-
-module.exports = {
-  SYSTEM_PROMPT,
-  openai,
-  buildContext,
-};
