@@ -1,3 +1,5 @@
+[functions]
+  node_bundler = "esbuild"
 [build]
   base = "frontend"
   command = "npm install && npm run build"
