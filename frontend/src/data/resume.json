@@ -1,69 +1,129 @@
 {
-  "name": "Ridha Rahman",
-  "headline": "Full-stack engineer focused on human-centered AI products",
-  "summary": "Experienced software engineer specializing in building conversational AI assistants and data-driven web applications that help teams work faster.",
-  "skills": [
+  "name": "Ridha Mahmood",
+  "location": "Gainesville, Virginia 20155",
+  "contact": {
+    "email": "rmah6390@gmail.com",
+    "phone": "(571)-363-5384"
+  },
+  "links": {
+    "linkedin": "https://linkedin.com/in/ridha-mahmood",
+    "github": "https://github.com/rmah6390"
+  },
+  "title": "B.S. Computer Science student | Software Engineering Minor",
+  "education": [
     {
-      "category": "Strongest Technical Skills",
-      "details": "Expertise in JavaScript, React, Node.js, Python, and building retrieval-augmented generation systems with OpenAI APIs."
-    },
-    {
-      "category": "Cloud & DevOps",
-      "details": "Skilled with Netlify, AWS Lambda, Docker, PostgreSQL, and CI/CD automation."
-    },
-    {
-      "category": "Collaboration",
-      "details": "Comfortable leading cross-functional squads, mentoring engineers, and working directly with stakeholders."
+      "degree": "Bachelor of Science, Computer Science",
+      "minor": "Software Engineering",
+      "school": "George Mason University (GMU), Fairfax, Virginia",
+      "expected_graduation": "May 2026"
     }
   ],
+  "technical_skills": {
+    "office_tools": [
+      "Microsoft Outlook",
+      "Microsoft Teams",
+      "SharePoint",
+      "Word",
+      "Excel",
+      "PowerPoint",
+      "Google Drive",
+      "Google Docs",
+      "Google Slides",
+      "Google Sheets",
+      "Google Meet"
+    ],
+    "software": [
+      "Git",
+      "GitHub",
+      "Linux/Unix",
+      "Visual Studio Code",
+      "Postman",
+      "Jira",
+      "Azure DevOps",
+      "Microsoft Power Automate",
+      "Microsoft Dynamics NAV",
+      "Docker",
+      "GitHub Actions (CI)",
+      "SQLite",
+      "PostgreSQL",
+      "JUnit",
+      "PyTest",
+      "Squarespace"
+    ],
+    "programming_languages": [
+      "Java",
+      "Python",
+      "TypeScript",
+      "JavaScript",
+      "C",
+      "SQL",
+      "HTML",
+      "CSS",
+      "Bash"
+    ],
+    "certifications": [
+      "Google: Using Python to Interact with the Operating System (2025)",
+      "Microsoft Azure Database Administrator Associate (2023)",
+      "QuickBooks Certified (2021)"
+    ]
+  },
   "experience": [
     {
-      "company": "Aurora Analytics",
-      "role": "Senior Software Engineer",
-      "period": "2022 – Present",
-      "location": "Remote",
+      "company": "DLT Solutions (TD SYNNEX)",
+      "role": "AP Specialist (Automation & Data Integrity)",
+      "location": "Herndon, VA (Hybrid)",
+      "start": "March 2022",
+      "end": "Present",
       "bullets": [
-        "Designed and shipped a customer support copilot that routes tickets through a Retrieval-Augmented Generation pipeline, reducing average response time by 37%.",
-        "Built end-to-end analytics dashboards in React and D3 that surface customer insights used by 200+ enterprise clients.",
-        "Led a modernization effort that migrated a monolithic Node.js service into serverless functions running on Netlify and AWS Lambda."
+        "Assisted and maintained Microsoft Power Automate workflows for invoice intake/approvals, automating multi-step routing and exception handling reducing manual touches by 50%.",
+        "Scripted automation integrated with Microsoft Dynamics NAV and Excel (VBA) to validate data, remove duplicate entries, and generate audit-ready reconciliation reports.",
+        "Operated VM-based processing jobs and authored runbooks/failover procedures to ensure reliable, scalable workflows during peak volume."
       ]
     },
     {
-      "company": "Nimbus Labs",
-      "role": "Software Engineer",
-      "period": "2018 – 2022",
-      "location": "San Francisco, CA",
+      "company": "Synergy Consultants & CPA",
+      "role": "Finance Data Intern",
+      "location": "Reston, VA (Onsite)",
+      "start": "June 2021",
+      "end": "October 2021",
       "bullets": [
-        "Implemented streaming chat interfaces in React for knowledge-base assistants supporting 10k daily active users.",
-        "Developed embedding pipelines that index product documentation and enable semantic search across 50k articles.",
-        "Collaborated with product and design to launch an onboarding assistant that increased trial-to-paid conversions by 14%."
+        "Audited and reconciled vendor accounts in QuickBooks/Excel, documenting discrepancies for remediation.",
+        "Streamlined monthly reporting by simplifying data pipelines and cleansing inputs for repeatable runs.",
+        "Assisted with secure workflow documentation and small data migrations."
       ]
     }
   ],
   "projects": [
     {
-      "name": "OpenHelp",
-      "description": "An open-source starter kit for building AI help centers.",
-      "highlights": [
-        "Provides Netlify Functions for secure OpenAI access and caching.",
-        "Includes a React front-end with Tailwind CSS for customizable chat experiences."
+      "name": "Ridha-GPT (Personal Résumé Assistant)",
+      "stack": ["React", "Vite", "TailwindCSS", "Netlify Functions (JavaScript)", "OpenAI", "RAG"],
+      "details": [
+        "Built a ChatGPT-style, purple-themed web app that answers questions about my résumé in full sentences.",
+        "Implements retrieval-augmented generation over a structured resume.json so answers stay grounded; if info is missing it responds, “I cannot confirm this from my resume.”",
+        "Frontend runs on Vite + React; serverless API uses Netlify Functions to call OpenAI securely without exposing the API key."
       ]
     },
     {
-      "name": "PulseBridge",
-      "description": "Healthcare analytics product that unifies EHR data into actionable insights for clinicians.",
-      "highlights": [
-        "Implemented HIPAA-compliant data pipelines and React dashboards for hospital administrators.",
-        "Created proactive alerting workflows that notify care teams about anomalies in near real-time."
+      "name": "Python Discord Bot",
+      "stack": ["discord.py", "dotenv", "SQLite", "CI/CD", "Docker"],
+      "details": [
+        "Developed a modular Cog-based bot implementing !ping, !roll, and per-server TODOs with SQLite persistence and dotenv-managed secrets.",
+        "Added CI/CD (GitHub Actions), PyTest unit tests, structured logging/error handling, and Docker containerization for reliable, reproducible deployments."
+      ]
+    },
+    {
+      "name": "AI Accessibility Website — Web Design Project",
+      "stack": ["HTML5", "CSS", "Squarespace", "WCAG 2.1 AA", "ARIA", "Keyboard Navigation", "Lighthouse", "axe", "CI"],
+      "details": [
+        "Designed and shipped a responsive site for low-vision users with WCAG 2.1 semantics (ARIA roles, alt text) and keyboard-only navigation for screen-reader compatibility.",
+        "Integrated automated accessibility checks (Lighthouse/axe) into CI and fixed contrast/heading issues, validating changes with light usability testing."
       ]
     }
   ],
-  "education": [
-    {
-      "institution": "University of Washington",
-      "degree": "B.S. in Computer Science",
-      "period": "2014 – 2018",
-      "details": "Research assistant in the interactive intelligence lab focusing on conversational agents."
-    }
+  "languages_spoken": [
+    'English (Native)',
+    'Urdu (Professional)',
+    'Hindi (Professional)',
+    'Punjabi (Working Proficiency)'
   ]
 }
