@@ -1,7 +1,5 @@
 [build]
-  # 1) install root deps (for Functions)
-  # 2) install frontend deps
-  # 3) build the frontend
+  # Install root deps (for Functions), then frontend deps, then build the app.
   command   = "npm install && npm install --prefix frontend && npm run build --prefix frontend"
   publish   = "frontend/dist"
   functions = "netlify/functions"
@@ -13,7 +11,5 @@
 
 [functions]
   node_bundler           = "esbuild"
-  # make the 'openai' package available to the Functions bundler
   external_node_modules  = ["openai"]
-  # ship your résumé file with the function bundle
   included_files         = ["frontend/src/data/resume.json"]
