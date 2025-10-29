@@ -157,4 +157,3 @@ export async function buildContext(question, topK = 6) {
     scoredChunks: scored
   };
 }
-
