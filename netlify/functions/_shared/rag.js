@@ -1,19 +1,15 @@
 // netlify/functions/_shared/rag.js
-// ESM module: matches "type": "module" in netlify/functions/package.json
+// Offline / resume-only mode (no OpenAI import or API key needed)
 
 import fs from 'node:fs';
 import path from 'node:path';
-import OpenAI from 'openai';
 
-/** Find and load resume.json reliably in prod and local dev */
+/** Load resume.json reliably on Netlify (base="frontend") and in local dev */
 export function loadResumeJson() {
   const candidates = [
-    // Production on Netlify with [build.base="frontend"]
-    path.join(process.cwd(), 'src', 'data', 'resume.json'),
-    // Local dev from repo root
-    path.join(process.cwd(), 'frontend', 'src', 'data', 'resume.json'),
-    // Local dev when cwd is "netlify/functions"
-    path.join(process.cwd(), '..', 'frontend', 'src', 'data', 'resume.json'),
+    path.join(process.cwd(), 'src', 'data', 'resume.json'),             // Netlify prod (base="frontend")
+    path.join(process.cwd(), 'frontend', 'src', 'data', 'resume.json'), // local dev from repo root
+    path.join(process.cwd(), '..', 'frontend', 'src', 'data', 'resume.json') // local when cwd=functions
   ];
   for (const p of candidates) {
     try {
@@ -23,136 +19,143 @@ export function loadResumeJson() {
       }
     } catch {}
   }
-  throw new Error(
-    'resume.json not found. Tried:\n' + candidates.map(p => ' - ' + p).join('\n')
-  );
+  // Still return something so we *never* 500
+  return { summary: 'No resume data was found.', experience: [], projects: [], skills: [] };
 }
 
-/** Build compact context from the resume (defensive to schema changes) */
-function buildContext(resume) {
-  const lines = [];
-  if (resume.name) lines.push(`Name: ${resume.name}`);
-  if (resume.title) lines.push(`Title: ${resume.title}`);
-  if (resume.summary) lines.push(`Summary: ${resume.summary}`);
+function firstSentences(text, n = 2) {
+  if (!text) return '';
+  const parts = String(text).split(/(?<=[.!?])\s+/);
+  return parts.slice(0, n).join(' ');
+}
 
-  if (Array.isArray(resume.experience) && resume.experience.length) {
-    lines.push('Experience:');
-    for (const exp of resume.experience.slice(0, 8)) {
-      const company = [exp.company, exp.location].filter(Boolean).join(' — ');
-      const dates = [exp.start, exp.end].filter(Boolean).join(' - ');
-      const header = [exp.role || exp.title, company].filter(Boolean).join(' @ ');
-      lines.push(`- ${header}${dates ? ` (${dates})` : ''}`);
-      if (Array.isArray(exp.highlights)) {
-        for (const h of exp.highlights.slice(0, 3)) lines.push(`  • ${h}`);
-      }
-    }
-  }
+function summarizeExperience(resume, max = 5) {
+  const exp = Array.isArray(resume.experience) ? resume.experience : [];
+  if (!exp.length) return 'I do not have experience details available in my current resume data.';
+  const items = exp.slice(0, max).map(e => {
+    const role = e.role || e.title || 'Role';
+    const company = e.company ? ` at ${e.company}` : '';
+    const dates = [e.start, e.end].filter(Boolean).join(' - ');
+    const highlights = Array.isArray(e.highlights) ? e.highlights.slice(0, 2).join('; ') : '';
+    const h = highlights ? ` Key contributions include ${highlights}.` : '';
+    return `${role}${company}${dates ? ` (${dates})` : ''}.${h}`;
+  });
+  const head = resume.summary ? `${firstSentences(resume.summary, 1)} ` : '';
+  return head + items.join(' ');
+}
 
-  if (Array.isArray(resume.projects) && resume.projects.length) {
-    lines.push('Projects:');
-    for (const p of resume.projects.slice(0, 8)) {
-      const header = [p.name, p.stack || p.tech].filter(Boolean).join(' — ');
-      lines.push(`- ${header}`);
-      if (p.description) lines.push(`  • ${p.description}`);
-      if (Array.isArray(p.highlights)) {
-        for (const h of p.highlights.slice(0, 2)) lines.push(`  • ${h}`);
-      }
-    }
-  }
+function summarizeProjects(resume, max = 5) {
+  const prj = Array.isArray(resume.projects) ? resume.projects : [];
+  if (!prj.length) return 'I do not have project details available in my current resume data.';
+  const items = prj.slice(0, max).map(p => {
+    const name = p.name || 'A project';
+    const tech = p.stack || p.tech ? ` using ${p.stack || p.tech}` : '';
+    const desc = p.description ? ` ${firstSentences(p.description, 1)}` : '';
+    return `${name}${tech}.${desc}`;
+  });
+  return items.join(' ');
+}
 
+function summarizeSkills(resume) {
   if (Array.isArray(resume.skills) && resume.skills.length) {
-    lines.push(`Skills: ${resume.skills.join(', ')}`);
-  } else if (resume.skills && typeof resume.skills === 'object') {
-    const kv = Object.entries(resume.skills)
-      .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : String(v)}`)
-      .join(' | ');
-    if (kv) lines.push(`Skills: ${kv}`);
+    return `Here are my primary skills: ${resume.skills.join(', ')}.`;
   }
-
-  return lines.join('\n');
+  if (resume.skills && typeof resume.skills === 'object') {
+    const flat = Object.entries(resume.skills)
+      .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : String(v)}`)
+      .join('; ');
+    if (flat) return `Here are my skills by category: ${flat}.`;
+  }
+  return 'I do not have skills listed in the current resume data.';
 }
 
-/** Keyword shortcuts: experience? projects? skills? top 3 projects? */
-function tryKeywordShortcuts(question, resume) {
+function summarizeEducation(resume) {
+  const ed = Array.isArray(resume.education) ? resume.education : [];
+  if (!ed.length) return '';
+  return ed.map(e => {
+    const name = [e.degree, e.field].filter(Boolean).join(' in ');
+    const at = e.institution ? ` at ${e.institution}` : '';
+    const when = [e.start, e.end].filter(Boolean).join(' - ');
+    return `${name}${at}${when ? ` (${when})` : ''}.`;
+  }).join(' ');
+}
+
+function genericSummary(resume) {
+  const parts = [];
+  if (resume.summary) parts.push(firstSentences(resume.summary, 2));
+  const exp = summarizeExperience(resume, 3);
+  if (exp) parts.push(exp);
+  const prj = summarizeProjects(resume, 3);
+  if (prj) parts.push(`Projects: ${prj}`);
+  const sk = summarizeSkills(resume);
+  if (sk) parts.push(sk);
+  const ed = summarizeEducation(resume);
+  if (ed) parts.push(ed);
+  return parts.filter(Boolean).join('\n\n');
+}
+
+/** Lightweight keyword routing + simple search fallback */
+function answerFromResume(question, resume) {
   const q = String(question || '').trim().toLowerCase();
 
-  const firstSentences = (text, n = 2) => {
-    if (!text) return '';
-    const parts = String(text).split(/(?<=[.!?])\s+/);
-    return parts.slice(0, n).join(' ');
-  };
-
-  const summarizeExperience = () => {
-    if (!Array.isArray(resume.experience) || resume.experience.length === 0) {
-      return 'I do not have experience details available in my current resume data.';
-    }
-    const items = resume.experience.map(exp => {
-      const role = exp.role || exp.title || 'Role';
-      const company = exp.company ? ` at ${exp.company}` : '';
-      const dates = [exp.start, exp.end].filter(Boolean).join(' - ');
-      const main = Array.isArray(exp.highlights) && exp.highlights.length
-        ? ` Key contributions include ${exp.highlights.slice(0, 2).join('; ')}.`
-        : '';
-      return `${role}${company}${dates ? ` (${dates})` : ''}.${main}`;
-    });
-    const head = resume.summary ? `${firstSentences(resume.summary, 1)} ` : '';
-    return head + items.slice(0, 5).join(' ');
-  };
-
-  const summarizeProjects = () => {
-    if (!Array.isArray(resume.projects) || resume.projects.length === 0) {
-      return 'I do not have project details available in my current resume data.';
-    }
-    const items = resume.projects.map(p => {
-      const name = p.name || 'A project';
-      const tech = p.stack || p.tech ? ` using ${p.stack || p.tech}` : '';
-      const desc = p.description ? ` ${firstSentences(p.description, 1)}` : '';
-      return `${name}${tech}.${desc}`;
-    });
-    return items.slice(0, 5).join(' ');
-  };
-
-  if (['experience', 'experience?'].includes(q)) return summarizeExperience();
-  if (['projects', 'projects?'].includes(q) || /top\s*3\s*projects\??/.test(q)) {
-    const base = summarizeProjects();
-    if (/top\s*3/.test(q)) {
-      const parts = base.split(/(?<=[.!?])\s+/).filter(Boolean);
-      return parts.slice(0, 3).join(' ');
-    }
-    return base;
+  // Keywords / intents
+  if (!q || /^(hi|hello|hey)\b/.test(q)) {
+    return genericSummary(resume);
   }
-  if (['skills', 'skills?'].includes(q)) {
-    if (Array.isArray(resume.skills)) {
-      return `Here are the primary skills: ${resume.skills.join(', ')}.`;
-    } else if (resume.skills && typeof resume.skills === 'object') {
-      const flat = Object.entries(resume.skills)
-        .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : String(v)}`)
-        .join('; ');
-      return flat ? `Here are the skills by category: ${flat}.`
-                  : 'I do not have skills listed in the current resume data.';
-    }
-    return 'I do not have skills listed in the current resume data.';
+  if (/(summarize|overview).*(experience)/.test(q) || ['experience', 'experience?'].includes(q)) {
+    return summarizeExperience(resume, 5);
   }
-  return null;
+  if (/top\s*3\s*projects?/.test(q)) {
+    return summarizeProjects(resume, 3);
+  }
+  if (/(projects?|portfolio)/.test(q)) {
+    return summarizeProjects(resume, 5);
+  }
+  if (/skills?/.test(q)) {
+    return summarizeSkills(resume);
+  }
+  if (/education|degree|university|college/.test(q)) {
+    const ed = summarizeEducation(resume);
+    return ed || 'I do not have education details available in my current resume data.';
+  }
+
+  // Naive search: score highlights + project text by token overlap
+  const tokens = q.split(/[^a-z0-9]+/).filter(Boolean);
+  const score = (text) => tokens.reduce((s, t) => s + (text.includes(t) ? 1 : 0), 0);
+
+  const hits = [];
+
+  const exp = Array.isArray(resume.experience) ? resume.experience : [];
+  exp.forEach(e => {
+    const header = [e.role || e.title, e.company].filter(Boolean).join(' @ ');
+    const base = [header, e.description || ''].join(' ');
+    let s = score(base.toLowerCase());
+    if (Array.isArray(e.highlights)) {
+      e.highlights.forEach(h => { s += score(String(h).toLowerCase()); });
+    }
+    if (s > 0) hits.push({ kind: 'experience', text: `${header}. ${Array.isArray(e.highlights) ? e.highlights.slice(0,2).join(' ') : ''}`, s });
+  });
+
+  const prj = Array.isArray(resume.projects) ? resume.projects : [];
+  prj.forEach(p => {
+    const header = [p.name, p.stack || p.tech].filter(Boolean).join(' — ');
+    const base = [header, p.description || '', ...(Array.isArray(p.highlights)? p.highlights: [])].join(' ');
+    const s = score(base.toLowerCase());
+    if (s > 0) hits.push({ kind: 'project', text: `${header}. ${firstSentences(p.description, 1)}`, s });
+  });
+
+  hits.sort((a, b) => b.s - a.s);
+  const top = hits.slice(0, 4).map(h => `• ${h.text}`).join('\n');
+  if (top) {
+    return `Based on my resume, here’s what’s most relevant to “${question}”:\n${top}`;
+  }
+
+  // Fallback generic summary
+  return genericSummary(resume);
 }
 
-/** Main answer: resume-grounded but can handle general questions */
+/** Public entry used by your Function */
 export async function getAnswer(question) {
   const resume = loadResumeJson();
-
-  const shortcut = tryKeywordShortcuts(question, resume);
-  if (shortcut) return shortcut;
-
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  const context = buildContext(resume);
-
-  const system = [
-    'You are Ridha-GPT, a helpful assistant focused on Ridha Mahmood.',
-    'Answer primarily using the resume context provided.',
-    'If a question goes beyond the resume, give a concise general answer AND tie it back to Ridha when possible.',
-    'Always reply in clear, full sentences.',
-    'If the resume does not contain the requested fact, briefly say it is not in the resume data.'
-  ].join(' ');
-
-  const messages = [
-    { role: 'system', content: `${system}\n\n=== RESUME CONTEXT START ===\n${context}\n=== RESUME CONTEXT END ===
+  return answerFromResume(question, resume);
+}
