@@ -1,4 +1,3 @@
-// netlify/functions/ask.js
 import { getAnswer } from './_shared/rag.js';
 
 export async function handler(event) {
