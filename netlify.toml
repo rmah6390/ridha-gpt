@@ -4,7 +4,7 @@
   publish = "dist"
 
 [functions]
-  # 👇 tell Netlify where your functions really are (relative to base)
-  directory = "../netlify/functions"
+  directory = "../netlify/functions"   # 👈 important when base="frontend"
   node_bundler = "esbuild"
+  external_node_modules = ["openai"]   # safe for SDK v4
   included_files = ["src/data/resume.json"]
