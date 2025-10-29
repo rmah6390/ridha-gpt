@@ -13,11 +13,12 @@ export default function SuggestedPrompts({ onPick }) {
           type="button"
           onClick={() => onPick(p)}
           style={{
-            border: 'none',
             padding: '0.5rem 0.75rem',
             borderRadius: '999px',
-            cursor: 'pointer',
-            opacity: 0.95
+            border: '1px solid rgba(255,255,255,0.15)',
+            background: 'rgba(255,255,255,0.06)',
+            color: 'inherit',
+            cursor: 'pointer'
           }}
         >
           {p}
