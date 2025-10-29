@@ -1,10 +1,14 @@
 [build]
-  base = "frontend"
-  command = "npm --prefix ../netlify/functions install && npm install && npm run build"
-  publish = "dist"
+  command   = "npm install && npm install --prefix frontend && npm run build --prefix frontend"
+  publish   = "frontend/dist"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/*"
+  to   = "/.netlify/functions/:splat"
+  status = 200
 
 [functions]
-  directory = "../netlify/functions"   # 👈 important when base="frontend"
-  node_bundler = "esbuild"
-  external_node_modules = ["openai"]   # safe for SDK v4
-  included_files = ["src/data/resume.json"]
+  node_bundler           = "esbuild"
+  external_node_modules  = ["openai"]
+  included_files         = ["frontend/src/data/resume.json"]
