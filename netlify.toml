@@ -1,5 +1,4 @@
 [build]
-  # Install root deps (for Functions), then frontend deps, then build the app.
   command   = "npm install && npm install --prefix frontend && npm run build --prefix frontend"
   publish   = "frontend/dist"
   functions = "netlify/functions"
