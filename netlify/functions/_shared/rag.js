@@ -1,68 +1,54 @@
-// netlify/functions/_shared/rag.js
-// ESM-only RAG helper for Netlify Functions.
-// - Stable resume.json path via process.cwd()
-// - Caches embeddings across invocations
-// - Tolerant to your resume.json shape (skills/experience/projects/education variants)
-
 import fs from "fs/promises";
 import path from "path";
 import OpenAI from "openai";
 
-/* ---------- System instruction used for personal answers ---------- */
 export const SYSTEM_PROMPT =
   `You are Ridha-GPT, a personal assistant that answers only using the provided resume context. ` +
   `Always respond in complete sentences. If the resume does not contain the answer, say: ` +
   `"I cannot confirm this from my resume."`;
 
-/* ---------- Resolve resume.json (packaged via included_files) ---------- */
-const RESUME_PATH = path.join(process.cwd(), "frontend", "src", "data", "resume.json");
+const RESUME_PATHS = [
+  path.join(process.cwd(), "frontend", "src", "data", "resume.json"),
+  path.join(process.cwd(), "src", "data", "resume.json")
+];
 
-// Lazy cache for the parsed resume and embeddings
+async function resolveResumePath() {
+  for (const p of RESUME_PATHS) {
+    try { await fs.access(p); return p; } catch {}
+  }
+  return RESUME_PATHS[0];
+}
+
 let _resumeCache = null;
 let _embeddedChunksPromise = null;
 
-// Single OpenAI client (uses env var OPENAI_API_KEY)
 export const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-/* ---------- Load & normalize resume ---------- */
 async function loadResume() {
   if (_resumeCache) return _resumeCache;
-  const raw = await fs.readFile(RESUME_PATH, "utf-8");
-  const json = JSON.parse(raw);
-  _resumeCache = json;
-  return json;
+  const p = await resolveResumePath();
+  const raw = await fs.readFile(p, "utf-8");
+  _resumeCache = JSON.parse(raw);
+  return _resumeCache;
 }
 
-function asArray(x) {
-  return Array.isArray(x) ? x : x == null ? [] : [x];
-}
+function asArray(x) { return Array.isArray(x) ? x : x == null ? [] : [x]; }
 
-/* ---------- Chunking: produce small, searchable text units ---------- */
 function chunkResume(data) {
   const chunks = [];
+  if (data.summary) chunks.push({ id: "summary", text: `Summary: ${data.summary}` });
 
-  // Summary
-  if (data.summary) {
-    chunks.push({ id: "summary", text: `Summary: ${data.summary}` });
-  }
-
-  // Skills: support either flat "skills" or nested "technical_skills.programming_languages"
-  const skills =
-    data.technical_skills?.programming_languages ??
-    data.skills ??
-    [];
+  const skills = data.technical_skills?.programming_languages ?? data.skills ?? [];
   if (Array.isArray(skills) && skills.length) {
     chunks.push({ id: "skills", text: `Skills: ${skills.join(", ")}` });
   }
 
-  // Experience
   for (const [i, job] of asArray(data.experience).entries()) {
-    const headerLines = [
+    const header = [
       `Experience: ${job.role ?? ""} at ${job.company ?? ""}`.trim(),
       [job.start, job.end].filter(Boolean).join(" – "),
       job.location
-    ].filter(Boolean);
-    const header = headerLines.join("\n");
+    ].filter(Boolean).join("\n");
 
     const bullets = asArray(job.bullets);
     if (bullets.length) {
@@ -74,15 +60,10 @@ function chunkResume(data) {
     }
   }
 
-  // Projects: support {name, details[]} or {name, desc} or {name, highlights[]}
   for (const [i, proj] of asArray(data.projects).entries()) {
     const base = [`Project: ${proj.name ?? ""}`.trim()];
     if (proj.desc) base.push(proj.desc);
-
-    const details = asArray(proj.details).length
-      ? asArray(proj.details)
-      : asArray(proj.highlights);
-
+    const details = asArray(proj.details).length ? asArray(proj.details) : asArray(proj.highlights);
     if (details.length) {
       for (const [j, d] of details.entries()) {
         chunks.push({ id: `proj-${i}-${j}`, text: `${base.join("\n")}\n• ${d}`.trim() });
@@ -92,7 +73,6 @@ function chunkResume(data) {
     }
   }
 
-  // Education: support degree, school, year/expected_graduation
   for (const [i, edu] of asArray(data.education).entries()) {
     const line = [
       `Education: ${edu.degree ?? ""}`.trim(),
@@ -105,7 +85,6 @@ function chunkResume(data) {
   return chunks;
 }
 
-/* ---------- Cosine similarity ---------- */
 function cosineSimilarity(a, b) {
   const dot = a.reduce((s, v, i) => s + v * b[i], 0);
   const magA = Math.sqrt(a.reduce((s, v) => s + v * v, 0));
@@ -113,30 +92,23 @@ function cosineSimilarity(a, b) {
   return magA && magB ? dot / (magA * magB) : 0;
 }
 
-/* ---------- Prepare & cache embeddings for all chunks ---------- */
 async function ensureEmbeddings() {
   if (_embeddedChunksPromise) return _embeddedChunksPromise;
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("Missing OPENAI_API_KEY");
-  }
+  if (!process.env.OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY");
 
   _embeddedChunksPromise = (async () => {
-    const resume = await loadResume();
-    const chunks = chunkResume(resume);
-    if (chunks.length === 0) return [];
-
+    const chunks = chunkResume(await loadResume());
+    if (!chunks.length) return [];
     const { data } = await openai.embeddings.create({
       model: "text-embedding-3-small",
       input: chunks.map(c => c.text)
     });
-
     return chunks.map((c, i) => ({ ...c, embedding: data[i].embedding }));
   })();
 
   return _embeddedChunksPromise;
 }
 
-/* ---------- Public: buildContext(question) → { context, scoredChunks } ---------- */
 export async function buildContext(question, topK = 6) {
   const embedded = await ensureEmbeddings();
   if (!embedded.length) return { context: "", scoredChunks: [] };
@@ -152,9 +124,6 @@ export async function buildContext(question, topK = 6) {
     .sort((a, b) => b.score - a.score)
     .slice(0, topK);
 
-  return {
-    context: scored.map(c => `- ${c.text}`).join("\n"),
-    scoredChunks: scored
-  };
+  return { context: scored.map(c => `- ${c.text}`).join("\n"), scoredChunks: scored };
 }
 
