@@ -1,5 +1,5 @@
 // netlify/functions/_shared/rag.js
-// Offline / resume-only mode (no OpenAI import or API key needed)
+// Resume-only (no OpenAI). Normalizes many common resume JSON shapes.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,12 +15,30 @@ export function loadResumeJson() {
     try {
       if (fs.existsSync(p)) {
         const txt = fs.readFileSync(p, 'utf-8');
-        return JSON.parse(txt);
+        const json = JSON.parse(txt);
+        if (process.env.DEBUG === 'true') {
+          console.log('RESUME: loaded from', p, 'keys=', Object.keys(json));
+        }
+        return json;
       }
-    } catch {}
+    } catch (e) {
+      console.error('RESUME: failed to read', p, e?.message || e);
+    }
   }
-  // Still return something so we *never* 500
-  return { summary: 'No resume data was found.', experience: [], projects: [], skills: [] };
+  // If nothing found, still return an object to avoid 500s
+  return {};
+}
+
+/* ---------------- Normalization helpers ---------------- */
+
+function unique(list) {
+  return Array.from(new Set(list.filter(Boolean).map(String)));
+}
+
+function asArray(x) {
+  if (Array.isArray(x)) return x;
+  if (x == null) return [];
+  return [x];
 }
 
 function firstSentences(text, n = 2) {
@@ -29,15 +47,162 @@ function firstSentences(text, n = 2) {
   return parts.slice(0, n).join(' ');
 }
 
+function normalizeSkills(rawSkills) {
+  // Accept: string[], [{name, keywords[]}] (JSON Resume), {category:[items]}, "a, b, c"
+  if (!rawSkills) return [];
+  if (typeof rawSkills === 'string') {
+    return unique(rawSkills.split(/[,;|]\s*/));
+  }
+  if (Array.isArray(rawSkills)) {
+    if (rawSkills.length && typeof rawSkills[0] === 'string') {
+      return unique(rawSkills);
+    }
+    if (rawSkills.length && typeof rawSkills[0] === 'object') {
+      // JSON Resume style buckets
+      const all = [];
+      for (const s of rawSkills) {
+        if (s?.name) all.push(String(s.name));
+        if (Array.isArray(s?.keywords)) all.push(...s.keywords.map(String));
+        if (Array.isArray(s?.items)) all.push(...s.items.map(String));
+      }
+      return unique(all);
+    }
+  }
+  if (typeof rawSkills === 'object') {
+    // { Programming: ["Python", "Go"], Cloud: ["AWS", "GCP"] }
+    const all = [];
+    for (const v of Object.values(rawSkills)) {
+      if (Array.isArray(v)) all.push(...v.map(String));
+      else if (v) all.push(String(v));
+    }
+    return unique(all);
+  }
+  return [];
+}
+
+function normalizeExperience(raw) {
+  // Accept arrays under many keys; map fields to {role, company, location, start, end, highlights[]}
+  const keys = ['experience', 'experiences', 'work', 'employment', 'jobs', 'roles', 'positions'];
+  let arr = [];
+  if (Array.isArray(raw)) arr = raw;
+  else if (raw && typeof raw === 'object') {
+    for (const k of keys) {
+      if (Array.isArray(raw[k])) { arr = raw[k]; break; }
+    }
+  }
+  const result = [];
+  for (const e of asArray(arr)) {
+    if (!e || typeof e !== 'object') continue;
+    const highlights =
+      Array.isArray(e.highlights) ? e.highlights :
+      Array.isArray(e.bullets) ? e.bullets :
+      Array.isArray(e.responsibilities) ? e.responsibilities :
+      e.summary ? [String(e.summary)] : [];
+    result.push({
+      role: e.role || e.title || e.position,
+      company: e.company || e.name || e.employer || e.organization,
+      location: e.location || e.city || e.place,
+      start: e.start || e.startDate || e.from,
+      end: e.end || e.endDate || e.to,
+      highlights
+    });
+  }
+  return result.filter(x => x.role || x.company || (x.highlights && x.highlights.length));
+}
+
+function normalizeProjects(raw) {
+  const keys = ['projects', 'project', 'portfolio', 'workSamples'];
+  let arr = [];
+  if (Array.isArray(raw)) arr = raw;
+  else if (raw && typeof raw === 'object') {
+    for (const k of keys) {
+      if (Array.isArray(raw[k])) { arr = raw[k]; break; }
+    }
+  }
+  const result = [];
+  for (const p of asArray(arr)) {
+    if (!p || typeof p !== 'object') continue;
+    const keywords =
+      Array.isArray(p.keywords) ? p.keywords :
+      Array.isArray(p.technologies) ? p.technologies :
+      Array.isArray(p.stack) ? p.stack : [];
+    const stack =
+      p.stack || p.tech || (Array.isArray(keywords) ? keywords.join(', ') : undefined);
+    const highlights =
+      Array.isArray(p.highlights) ? p.highlights :
+      Array.isArray(p.achievements) ? p.achievements : [];
+    result.push({
+      name: p.name || p.title,
+      description: p.description || p.summary,
+      stack,
+      highlights
+    });
+  }
+  return result.filter(x => x.name || x.description);
+}
+
+function normalizeEducation(raw) {
+  const keys = ['education', 'educations', 'studies'];
+  let arr = [];
+  if (Array.isArray(raw)) arr = raw;
+  else if (raw && typeof raw === 'object') {
+    for (const k of keys) {
+      if (Array.isArray(raw[k])) { arr = raw[k]; break; }
+    }
+  }
+  const result = [];
+  for (const e of asArray(arr)) {
+    if (!e || typeof e !== 'object') continue;
+    result.push({
+      institution: e.institution || e.school || e.university || e.college || e.name,
+      degree: e.degree || e.qualification,
+      field: e.area || e.field || e.major,
+      start: e.startDate || e.start || e.from,
+      end: e.endDate || e.end || e.to
+    });
+  }
+  return result;
+}
+
+function normalizeResume(raw) {
+  const name = raw.name || raw.basics?.name || raw.profile?.name;
+  const title = raw.title || raw.basics?.label || raw.profile?.title;
+  const summary = raw.summary || raw.basics?.summary || raw.about || raw.profile?.summary;
+
+  const experience = normalizeExperience(
+    raw.experience ?? raw.experiences ?? raw.work ?? raw.employment ?? raw.jobs ?? raw.roles ?? raw.positions ?? raw
+  );
+  const projects = normalizeProjects(
+    raw.projects ?? raw.project ?? raw.portfolio ?? raw
+  );
+  const skills = normalizeSkills(
+    raw.skills ?? raw.skill ?? raw.technologies ?? raw.techStack ?? raw.stack ?? raw.tools
+  );
+  const education = normalizeEducation(
+    raw.education ?? raw.educations ?? raw.study ?? raw
+  );
+
+  if (process.env.DEBUG === 'true') {
+    console.log('RESUME normalized counts:', {
+      experience: experience.length, projects: projects.length, skills: skills.length, education: education.length
+    });
+  }
+
+  return { name, title, summary, experience, projects, skills, education };
+}
+
+/* ---------------- Answer helpers ---------------- */
+
 function summarizeExperience(resume, max = 5) {
-  const exp = Array.isArray(resume.experience) ? resume.experience : [];
+  const exp = resume.experience || [];
   if (!exp.length) return 'I do not have experience details available in my current resume data.';
   const items = exp.slice(0, max).map(e => {
-    const role = e.role || e.title || 'Role';
+    const role = e.role || 'Role';
     const company = e.company ? ` at ${e.company}` : '';
     const dates = [e.start, e.end].filter(Boolean).join(' - ');
-    const highlights = Array.isArray(e.highlights) ? e.highlights.slice(0, 2).join('; ') : '';
-    const h = highlights ? ` Key contributions include ${highlights}.` : '';
+    const h = Array.isArray(e.highlights) && e.highlights.length
+      ? ` Key contributions include ${e.highlights.slice(0, 2).join('; ')}.`
+      : '';
     return `${role}${company}${dates ? ` (${dates})` : ''}.${h}`;
   });
   const head = resume.summary ? `${firstSentences(resume.summary, 1)} ` : '';
@@ -45,11 +210,11 @@ function summarizeExperience(resume, max = 5) {
 }
 
 function summarizeProjects(resume, max = 5) {
-  const prj = Array.isArray(resume.projects) ? resume.projects : [];
+  const prj = resume.projects || [];
   if (!prj.length) return 'I do not have project details available in my current resume data.';
   const items = prj.slice(0, max).map(p => {
     const name = p.name || 'A project';
-    const tech = p.stack || p.tech ? ` using ${p.stack || p.tech}` : '';
+    const tech = p.stack ? ` using ${p.stack}` : '';
     const desc = p.description ? ` ${firstSentences(p.description, 1)}` : '';
     return `${name}${tech}.${desc}`;
   });
@@ -57,20 +222,13 @@ function summarizeProjects(resume, max = 5) {
 }
 
 function summarizeSkills(resume) {
-  if (Array.isArray(resume.skills) && resume.skills.length) {
-    return `Here are my primary skills: ${resume.skills.join(', ')}.`;
-  }
-  if (resume.skills && typeof resume.skills === 'object') {
-    const flat = Object.entries(resume.skills)
-      .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : String(v)}`)
-      .join('; ');
-    if (flat) return `Here are my skills by category: ${flat}.`;
-  }
-  return 'I do not have skills listed in the current resume data.';
+  const list = resume.skills || [];
+  if (!list.length) return 'I do not have skills listed in the current resume data.';
+  return `Here are my primary skills: ${list.join(', ')}.`;
 }
 
 function summarizeEducation(resume) {
-  const ed = Array.isArray(resume.education) ? resume.education : [];
+  const ed = resume.education || [];
   if (!ed.length) return '';
   return ed.map(e => {
     const name = [e.degree, e.field].filter(Boolean).join(' in ');
@@ -94,11 +252,10 @@ function genericSummary(resume) {
   return parts.filter(Boolean).join('\n\n');
 }
 
-/** Lightweight keyword routing + simple search fallback */
+/** Lightweight intent routing + simple search fallback */
 function answerFromResume(question, resume) {
   const q = String(question || '').trim().toLowerCase();
 
-  // Keywords / intents
   if (!q || /^(hi|hello|hey)\b/.test(q)) {
     return genericSummary(resume);
   }
@@ -119,43 +276,35 @@ function answerFromResume(question, resume) {
     return ed || 'I do not have education details available in my current resume data.';
   }
 
-  // Naive search: score highlights + project text by token overlap
+  // Naive relevance search across experience+projects
   const tokens = q.split(/[^a-z0-9]+/).filter(Boolean);
   const score = (text) => tokens.reduce((s, t) => s + (text.includes(t) ? 1 : 0), 0);
 
   const hits = [];
 
-  const exp = Array.isArray(resume.experience) ? resume.experience : [];
-  exp.forEach(e => {
-    const header = [e.role || e.title, e.company].filter(Boolean).join(' @ ');
-    const base = [header, e.description || ''].join(' ');
-    let s = score(base.toLowerCase());
-    if (Array.isArray(e.highlights)) {
-      e.highlights.forEach(h => { s += score(String(h).toLowerCase()); });
-    }
-    if (s > 0) hits.push({ kind: 'experience', text: `${header}. ${Array.isArray(e.highlights) ? e.highlights.slice(0,2).join(' ') : ''}`, s });
-  });
-
-  const prj = Array.isArray(resume.projects) ? resume.projects : [];
-  prj.forEach(p => {
-    const header = [p.name, p.stack || p.tech].filter(Boolean).join(' — ');
-    const base = [header, p.description || '', ...(Array.isArray(p.highlights)? p.highlights: [])].join(' ');
+  for (const e of resume.experience || []) {
+    const header = [e.role, e.company].filter(Boolean).join(' @ ');
+    const base = [header, ...(Array.isArray(e.highlights) ? e.highlights : [])].join(' ');
+    const s = score(base.toLowerCase());
+    if (s > 0) hits.push({ kind: 'experience', text: `${header}. ${firstSentences(base, 1)}`, s });
+  }
+  for (const p of resume.projects || []) {
+    const header = [p.name, p.stack].filter(Boolean).join(' — ');
+    const base = [header, p.description || '', ...(Array.isArray(p.highlights) ? p.highlights : [])].join(' ');
     const s = score(base.toLowerCase());
     if (s > 0) hits.push({ kind: 'project', text: `${header}. ${firstSentences(p.description, 1)}`, s });
-  });
+  }
 
   hits.sort((a, b) => b.s - a.s);
   const top = hits.slice(0, 4).map(h => `• ${h.text}`).join('\n');
-  if (top) {
-    return `Based on my resume, here’s what’s most relevant to “${question}”:\n${top}`;
-  }
+  if (top) return `Based on my resume, here’s what’s most relevant to “${question}”:\n${top}`;
 
-  // Fallback generic summary
   return genericSummary(resume);
 }
 
 /** Public entry used by your Function */
 export async function getAnswer(question) {
-  const resume = loadResumeJson();
+  const raw = loadResumeJson();
+  const resume = normalizeResume(raw);
   return answerFromResume(question, resume);
 }
