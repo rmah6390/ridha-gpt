@@ -1,16 +1,16 @@
-export const handler = async (event) => {
+export const handler = async () => {
   return {
     statusCode: 200,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify([
       "What are your strongest technical skills?",
-      "Tell me about your recent projects.",
+      "What are the top three projects on your résumé and what did you solve?",
+      "Summarize your experience in two sentences.",
       "What impact did you make in your last role?",
+      "Which tools and frameworks do you use most?",
       "What roles are you targeting next?",
-      "Where are you studying and when do you graduate?",
-      "Can you summarize your experience in two sentences?",
-      "How does Ridha-GPT work?",
-      "What are you learning right now?"
+      "Tell me about a time you solved a hard problem.",
+      "How does Ridha-GPT work?"
     ])
   };
 };
