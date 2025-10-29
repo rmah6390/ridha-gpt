@@ -1,6 +1,6 @@
-import { getAnswer } from './_shared/rag.js';
+import { SYSTEM_PROMPT, openai, buildContext } from "./_shared/rag.js";
 
-export async function handler(event) {
+export const handler = async (event) => {
   try {
     const { question } = event.queryStringParameters || {};
     const body = event.body && !question ? JSON.parse(event.body) : null;
