@@ -1,14 +1,11 @@
 [build]
   base = "frontend"
-  command = "npm install && npm run build"   # run in /frontend (no --prefix)
+  command = "npm --prefix ../netlify/functions ci || npm --prefix ../netlify/functions install && npm ci && npm run build"
   publish = "dist"
-  functions = "../netlify/functions"         # functions live one level up (repo root)
-
-[[redirects]]
-  from = "/api/*"
-  to   = "/.netlify/functions/:splat"
-  status = 200
 
 [functions]
-  node_bundler  = "esbuild"
-  included_files = ["frontend/src/data/resume.json"]
+  node_bundler = "esbuild"
+  # Optional (not strictly required for `openai`, but safe to include)
+  external_node_modules = ["openai"]
+  # Paths here are relative to the base ("frontend"), so drop the "frontend/" prefix:
+  included_files = ["src/data/resume.json"]
