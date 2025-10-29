@@ -3,13 +3,12 @@ export const handler = async () => {
     statusCode: 200,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify([
-      "What are your strongest technical skills?",
-      "What are the top three projects on your résumé and what did you solve?",
-      "Summarize your experience in two sentences.",
-      "What impact did you make in your last role?",
-      "Which tools and frameworks do you use most?",
-      "What roles are you targeting next?",
-      "Tell me about a time you solved a hard problem.",
+      "Summarize my experience in a few sentences.",
+      "What are the top 3 projects on my résumé and what did I do on each?",
+      "Which skills do I highlight most in my resume?",
+      "What impact did I make in my last role?",
+      "What roles am I targeting next?",
+      "What are my strongest technical skills?",
       "How does Ridha-GPT work?"
     ])
   };
