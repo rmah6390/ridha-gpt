@@ -1,129 +1,78 @@
 {
   "name": "Ridha Mahmood",
-  "location": "Gainesville, Virginia 20155",
-  "contact": {
-    "email": "rmah6390@gmail.com",
-    "phone": "(571)-363-5384"
-  },
-  "links": {
-    "linkedin": "https://linkedin.com/in/ridha-mahmood",
-    "github": "https://github.com/rmah6390"
-  },
-  "title": "B.S. Computer Science student | Software Engineering Minor",
-  "education": [
-    {
-      "degree": "Bachelor of Science, Computer Science",
-      "minor": "Software Engineering",
-      "school": "George Mason University (GMU), Fairfax, Virginia",
-      "expected_graduation": "May 2026"
-    }
+  "title": "B.S. Computer Science Candidate | Software Engineering Minor",
+  "summary": "Computer Science student with hands-on experience in automation, data integrity, and building small web apps. Comfortable shipping projects end-to-end and explaining technical choices clearly.",
+  "skills": [
+    "JavaScript",
+    "TypeScript",
+    "Java",
+    "Python",
+    "SQL",
+    "HTML",
+    "CSS",
+    "Linux/Unix",
+    "Git/GitHub",
+    "Azure",
+    "Power Automate"
   ],
-  "technical_skills": {
-    "office_tools": [
-      "Microsoft Outlook",
-      "Microsoft Teams",
-      "SharePoint",
-      "Word",
-      "Excel",
-      "PowerPoint",
-      "Google Drive",
-      "Google Docs",
-      "Google Slides",
-      "Google Sheets",
-      "Google Meet"
-    ],
-    "software": [
-      "Git",
-      "GitHub",
-      "Linux/Unix",
-      "Visual Studio Code",
-      "Postman",
-      "Jira",
-      "Azure DevOps",
-      "Microsoft Power Automate",
-      "Microsoft Dynamics NAV",
-      "Docker",
-      "GitHub Actions (CI)",
-      "SQLite",
-      "PostgreSQL",
-      "JUnit",
-      "PyTest",
-      "Squarespace"
-    ],
-    "programming_languages": [
-      "Java",
-      "Python",
-      "TypeScript",
-      "JavaScript",
-      "C",
-      "SQL",
-      "HTML",
-      "CSS",
-      "Bash"
-    ],
-    "certifications": [
-      "Google: Using Python to Interact with the Operating System (2025)",
-      "Microsoft Azure Database Administrator Associate (2023)",
-      "QuickBooks Certified (2021)"
-    ]
-  },
   "experience": [
     {
       "company": "DLT Solutions (TD SYNNEX)",
       "role": "AP Specialist (Automation & Data Integrity)",
       "location": "Herndon, VA (Hybrid)",
-      "start": "March 2022",
+      "start": "Mar 2022",
       "end": "Present",
       "bullets": [
-        "Assisted and maintained Microsoft Power Automate workflows for invoice intake/approvals, automating multi-step routing and exception handling reducing manual touches by 50%.",
-        "Scripted automation integrated with Microsoft Dynamics NAV and Excel (VBA) to validate data, remove duplicate entries, and generate audit-ready reconciliation reports.",
-        "Operated VM-based processing jobs and authored runbooks/failover procedures to ensure reliable, scalable workflows during peak volume."
+        "Maintained and iterated Microsoft Power Automate workflows for invoice intake/approvals, reducing manual touches.",
+        "Integrated Microsoft Dynamics NAV and Excel validation checks to remove duplicates and surface exceptions.",
+        "Operated VM-based jobs; wrote simple runbooks/failover steps to keep processing reliable during peak volume."
       ]
     },
     {
       "company": "Synergy Consultants & CPA",
       "role": "Finance Data Intern",
       "location": "Reston, VA (Onsite)",
-      "start": "June 2021",
-      "end": "October 2021",
+      "start": "Jun 2021",
+      "end": "Oct 2021",
       "bullets": [
-        "Audited and reconciled vendor accounts in QuickBooks/Excel, documenting discrepancies for remediation.",
-        "Streamlined monthly reporting by simplifying data pipelines and cleansing inputs for repeatable runs.",
-        "Assisted with secure workflow documentation and small data migrations."
+        "Audited vendor accounts and reconciled statements in QuickBooks/Excel.",
+        "Simplified monthly reports by cleaning inputs and documenting repeatable steps."
       ]
     }
   ],
   "projects": [
     {
       "name": "Ridha-GPT (Personal Résumé Assistant)",
-      "stack": ["React", "Vite", "TailwindCSS", "Netlify Functions (JavaScript)", "OpenAI", "RAG"],
+      "desc": "ChatGPT-style site that answers questions about my résumé in full sentences using RAG.",
       "details": [
-        "Built a ChatGPT-style, purple-themed web app that answers questions about my résumé in full sentences.",
-        "Implements retrieval-augmented generation over a structured resume.json so answers stay grounded; if info is missing it responds, “I cannot confirm this from my resume.”",
-        "Frontend runs on Vite + React; serverless API uses Netlify Functions to call OpenAI securely without exposing the API key."
+        "Frontend: React + Vite + Tailwind; Functions: Netlify (JavaScript).",
+        "Answers only from resume.json when asked about me; falls back to general answers via OpenAI for non-personal questions."
       ]
     },
     {
       "name": "Python Discord Bot",
-      "stack": ["discord.py", "dotenv", "SQLite", "CI/CD", "Docker"],
       "details": [
-        "Developed a modular Cog-based bot implementing !ping, !roll, and per-server TODOs with SQLite persistence and dotenv-managed secrets.",
-        "Added CI/CD (GitHub Actions), PyTest unit tests, structured logging/error handling, and Docker containerization for reliable, reproducible deployments."
+        "Cog-based bot with !ping, !roll, and per-server TODOs with SQLite persistence.",
+        "Added GitHub Actions CI, structured logging, dotenv secrets, and Dockerfile."
       ]
     },
     {
-      "name": "AI Accessibility Website — Web Design Project",
-      "stack": ["HTML5", "CSS", "Squarespace", "WCAG 2.1 AA", "ARIA", "Keyboard Navigation", "Lighthouse", "axe", "CI"],
+      "name": "AI Accessibility Website",
       "details": [
-        "Designed and shipped a responsive site for low-vision users with WCAG 2.1 semantics (ARIA roles, alt text) and keyboard-only navigation for screen-reader compatibility.",
-        "Integrated automated accessibility checks (Lighthouse/axe) into CI and fixed contrast/heading issues, validating changes with light usability testing."
+        "Responsive site with WCAG 2.1 semantics, ARIA, and keyboard-only navigation.",
+        "Used Lighthouse/axe checks and fixed contrast/heading issues."
       ]
     }
   ],
-  "languages_spoken": [
-    'English (Native)',
-    'Urdu (Professional)',
-    'Hindi (Professional)',
-    'Punjabi (Working Proficiency)'
-  ]
+  "education": [
+    {
+      "degree": "B.S. in Computer Science (Minor: Software Engineering)",
+      "school": "George Mason University (GMU)",
+      "expected_graduation": "May 2026"
+    }
+  ],
+  "links": {
+    "github": "https://github.com/rmah6390",
+    "linkedin": "https://www.linkedin.com/in/ridha-mahmood"
+  }
 }
