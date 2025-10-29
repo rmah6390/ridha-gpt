@@ -1,6 +1,6 @@
 # Ridha-GPT
 
-Ridha-GPT is a purple, ChatGPT-style résumé assistant. It runs a React + Vite frontend backed by Netlify Functions that call OpenAI with Retrieval-Augmented Generation (RAG) over a local `resume.json` file.
+Ridha-GPT is a ChatGPT-style resume assistant. It runs a React + Vite frontend backed by Netlify Functions that call OpenAI with Retrieval-Augmented Generation (RAG) over a local resume.json file.
 
 ## Project structure
 
