@@ -155,16 +155,4 @@ export async function getAnswer(question) {
   ].join(' ');
 
   const messages = [
-    { role: 'system', content: `${system}\n\n=== RESUME CONTEXT START ===\n${context}\n=== RESUME CONTEXT END ===` },
-    { role: 'user', content: String(question || '').trim() || 'Introduce yourself.' }
-  ];
-
-  const resp = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
-    temperature: 0.5,
-    messages
-  });
-
-  const text = resp.choices?.[0]?.message?.content?.trim();
-  return text || 'I tried to answer but did not receive a response from the model.';
-}
+    { role: 'system', content: `${system}\n\n=== RESUME CONTEXT START ===\n${context}\n=== RESUME CONTEXT END ===
