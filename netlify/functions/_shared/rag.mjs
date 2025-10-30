@@ -2,24 +2,24 @@ import fs from "fs/promises";
 import path from "path";
 import OpenAI from "openai";
 
-/* --- Recruiter-friendly, third-person style (she/her), no markdown --- */
+/* Third-person, she/her; no markdown; ≤4 sentences unless asked for more */
 export const SYSTEM_PROMPT =
   "You are a professional assistant representing the candidate Ridha Mahmood. " +
   "Use she/her pronouns. Answer in third person (e.g., 'Ridha's skills include …'). " +
-  "When the question is about Ridha, rely on the Profile Context as the source of truth. " +
-  "Do not mention or hint at any sources (do not say résumé/CV/profile). " +
-  "Write naturally in plain sentences, no markdown, no bullets, no asterisks. " +
+  "Do not mention or hint at any sources. " +
+  "Write naturally in plain sentences, no markdown, no asterisks. " +
   "Keep answers concise—no more than 4 sentences unless the user explicitly asks for more. " +
   "If a specific fact about Ridha is not in the context, respond briefly without speculating. " +
-  "If the user asks a general (non‑Ridha) question, ignore the context and just answer normally in a friendly tone.";
+  "If the user asks a general question, ignore the context and answer normally in a friendly tone.";
 
 const RESUME_PATHS = [
   path.join(process.cwd(), "frontend", "src", "data", "resume.json"),
-  path.join(process.cwd(), "src", "data", "resume.json"),
+  path.join(process.cwd(), "src", "data", "resume.json")
 ];
 
 let _resumeCache = null;
 let _embeddedChunksPromise = null;
+
 export const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 async function resolveResumePath() {
@@ -41,7 +41,7 @@ function chunkResume(data) {
   const chunks = [];
   if (data.summary) chunks.push({ id: "summary", text: `Summary: ${data.summary}` });
 
-  const skills = data.technical_skills?.programming_languages ?? data.skills ?? [];
+  const skills = (data.technical_skills && data.technical_skills.programming_languages) || data.skills || [];
   if (Array.isArray(skills) && skills.length) {
     chunks.push({ id: "skills", text: `Skills: ${skills.join(", ")}` });
   }
@@ -52,7 +52,6 @@ function chunkResume(data) {
       [job.start, job.end].filter(Boolean).join(" – "),
       job.location
     ].filter(Boolean).join("\n");
-
     const bullets = asArray(job.bullets);
     if (bullets.length) {
       for (const [j, b] of bullets.entries()) {
@@ -85,7 +84,6 @@ function chunkResume(data) {
     if (line) chunks.push({ id: `edu-${i}`, text: line });
   }
 
-  // Optional: include explicit target roles if present
   if (Array.isArray(data.target_roles) && data.target_roles.length) {
     chunks.push({ id: "targets", text: `Target roles: ${data.target_roles.join(", ")}` });
   }
@@ -133,6 +131,4 @@ export async function buildContext(question, topK = 6) {
     .slice(0, topK);
 
   return { context: scored.map(c => `- ${c.text}`).join("\n"), scoredChunks: scored };
-}
-
 }
