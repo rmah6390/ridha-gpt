@@ -7,6 +7,10 @@
     "Software Engineer (New Grad / Full-time)",
     "AI/ML Engineering or related software roles"
   ],
+  "contact": {
+    "email": "rmah6390@gmail.com",
+    "linkedin": "linkedin.com/ridha-mahmood"
+  },
   "skills": [
     "JavaScript",
     "TypeScript",
@@ -48,7 +52,7 @@
   ],
   "projects": [
     {
-      "name": "Ridha-GPT (Personal Resume Assistant)",
+      "name": "Ridha-GPT (Personal Assistant Website)",
       "desc": "ChatGPT-style site that answers questions about Ridha in full sentences using retrieval over a structured profile.",
       "details": [
         "Frontend built with React, Vite, and Tailwind; backend uses Netlify Functions in JavaScript.",
@@ -58,15 +62,15 @@
     {
       "name": "Python Discord Bot",
       "details": [
-        "Developed a Python (discord.py) bot with modular Cog architecture and implemented !ping, !roll, and per-server TODOs with SQLite persistence and secrets via dotenv. ",
+        "Cog-based bot with !ping, !roll, and per-server TODOs backed by SQLite.",
         "Added GitHub Actions CI, structured logging, dotenv-managed secrets, and a Dockerfile for reproducible deploys."
       ]
     },
     {
       "name": "AI Accessibility Website",
       "details": [
-        "Designed and shipped a responsive site for low-vision users with semantics (ARIA roles, alt text) and keyboard-only navigation to ensure screen-reader compatibility. ",
-        "Integrated automated accessibility checks (Lighthouse/axe) into CI to prevent regressions and fixed contrast/heading issues and validated changes with light usability testing on mobile and desktop. "
+        "Improved accessibility with WCAG 2.1 practices, ARIA semantics, and keyboard-only navigation.",
+        "Used Lighthouse and axe to identify and fix contrast and heading issues."
       ]
     }
   ],
@@ -79,6 +83,6 @@
   ],
   "links": {
     "github": "https://github.com/rmah6390",
-    "linkedin": "https://www.linkedin.com/in/ridha-mahmood"
+    "linkedin_full": "https://www.linkedin.com/in/ridha-mahmood"
   }
 }
