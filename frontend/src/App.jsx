@@ -68,7 +68,7 @@ export default function App() {
           <div>
             <h1 className="text-lg font-semibold">Ridha‑GPT</h1>
             <p className="text-xs text-neutral-400">
-              A concise, recruiter‑friendly assistant about Ridha Mahmood.
+              An= Perosnal Ai Assistant about Ridha Mahmood.
             </p>
           </div>
         </div>
