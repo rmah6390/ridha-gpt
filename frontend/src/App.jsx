@@ -1,135 +1,133 @@
-// frontend/src/App.jsx
-import { useState, useRef } from 'react';
-import SuggestedPrompts from './components/SuggestedPrompts.jsx';
+import { useEffect, useRef, useState } from "react";
+
+const SUGGESTIONS = [
+  "Give me a brief summary of Ridha.",
+  "What are Ridha’s strongest technical skills?",
+  "What are Ridha’s top 3 projects and what did he do on each?",
+  "What roles is Ridha targeting next?",
+];
+
+function Bubble({ role, children }) {
+  const isUser = role === "user";
+  return (
+    <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-3`}>
+      <div
+        className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-6 shadow
+          ${isUser ? "bg-violet-600 text-white" : "bg-neutral-800 text-neutral-100"}`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const [messages, setMessages] = useState([
     {
-      role: 'assistant',
+      role: "assistant",
       content:
-        "Hi, I'm Ridha-GPT. Ask me anything about my resume, and I'll answer based on the details I have."
+        "Hi, ask me anything about Ridha’s experience, projects, and skills."
     }
   ]);
-  const [input, setInput] = useState('');
-  const sendingRef = useRef(false);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const listRef = useRef(null);
 
-  async function send(questionMaybe) {
-    if (sendingRef.current) return; // prevent double-sends
-    const q = (questionMaybe ?? input).trim();
-    if (!q) return;
+  useEffect(() => {
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages]);
 
-    sendingRef.current = true;
-    setMessages((m) => [...m, { role: 'user', content: q }]);
-    setInput('');
+  const ask = async (q) => {
+    const question = q ?? input.trim();
+    if (!question) return;
+    setInput("");
+    setMessages((m) => [...m, { role: "user", content: question }]);
+    setLoading(true);
 
     try {
-      const res = await fetch('/.netlify/functions/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q })
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
       });
-
-      // even on 500, try to parse body for consistency
-      let data = {};
-      try { data = await res.json(); } catch {}
-
-      const answer =
-        data?.answer ??
-        (res.ok
-          ? 'Sorry, something went wrong while I was trying to answer that.'
-          : 'Sorry, the server returned an error trying to answer that.');
-
-      setMessages((m) => [...m, { role: 'assistant', content: answer }]);
-      if (data?._metrics?.server_ms != null) {
-        console.log('server_ms =', data._metrics.server_ms);
-      }
-    } catch (e) {
-      console.error(e);
-      setMessages((m) => [
-        ...m,
-        { role: 'assistant', content: 'Sorry, something went wrong while I was trying to answer that.' }
-      ]);
+      const data = await res.json();
+      const answer = data.answer || data.error || "Sorry, I couldn’t answer that.";
+      setMessages((m) => [...m, { role: "assistant", content: answer }]);
+    } catch {
+      setMessages((m) => [...m, { role: "assistant", content: "Sorry, something went wrong." }]);
     } finally {
-      sendingRef.current = false;
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center' }}>
-      <div style={{ width: 'min(900px, 95vw)', padding: '1.25rem' }}>
-        <h1 style={{ margin: 0, fontSize: '1.6rem' }}>Ridha-GPT — A Personal AI Assistant</h1>
-        <p style={{ opacity: 0.85, marginTop: '0.4rem' }}>
-          Built to answer questions about Ridha’s experience using only the resume data.
-        </p>
+    <div className="min-h-screen bg-[#0b0b10] text-neutral-100">
+      <header className="sticky top-0 z-10 border-b border-white/10 backdrop-blur bg-[#0b0b10]/80">
+        <div className="mx-auto max-w-3xl px-4 py-4 flex items-center gap-3">
+          <div className="h-8 w-8 rounded-md bg-violet-600 grid place-items-center font-semibold">R</div>
+          <div>
+            <h1 className="text-lg font-semibold">Ridha‑GPT</h1>
+            <p className="text-xs text-neutral-400">
+              A concise, recruiter‑friendly assistant about Ridha Mahmood.
+            </p>
+          </div>
+        </div>
+      </header>
 
-        {/* Suggested questions */}
-        <SuggestedPrompts onPick={(p) => send(p)} />
-
-        {/* Chat region */}
-        <div
-          style={{
-            marginTop: '1rem',
-            borderRadius: '16px',
-            padding: '1rem',
-            background: 'rgba(255,255,255,0.05)'
-          }}
-        >
-          {messages.map((m, i) => (
-            <div key={i} style={{ marginBottom: '0.75rem', display: 'flex' }}>
-              <div
-                style={{
-                  maxWidth: '80%',
-                  padding: '0.6rem 0.8rem',
-                  borderRadius: '12px',
-                  background: m.role === 'user' ? 'rgba(140, 84, 255, 0.2)' : 'rgba(255,255,255,0.06)'
-                }}
-              >
-                <div style={{ opacity: 0.75, fontSize: '0.78rem', marginBottom: '0.25rem' }}>
-                  {m.role === 'user' ? 'YOU' : 'RIDHA-GPT'}
-                </div>
-                <div style={{ whiteSpace: 'pre-wrap' }}>{m.content}</div>
-              </div>
-            </div>
+      <main className="mx-auto max-w-3xl px-4">
+        {/* suggestions */}
+        <div className="flex flex-wrap gap-2 py-4">
+          {SUGGESTIONS.map((s) => (
+            <button
+              key={s}
+              onClick={() => ask(s)}
+              className="rounded-full border border-white/10 bg-neutral-900 px-3 py-1.5 text-xs text-neutral-200 hover:border-violet-500 hover:text-violet-200 transition"
+            >
+              {s}
+            </button>
           ))}
         </div>
 
-        {/* Input row */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your question here..."
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                send();
-              }
-            }}
-            style={{
-              flex: 1,
-              padding: '0.75rem 0.9rem',
-              borderRadius: '12px',
-              border: '1px solid rgba(255,255,255,0.15)',
-              background: 'rgba(255,255,255,0.06)',
-              color: 'inherit'
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => send()}
-            style={{
-              padding: '0.75rem 1rem',
-              borderRadius: '12px',
-              border: '1px solid rgba(255,255,255,0.15)',
-              background: 'rgba(140, 84, 255, 0.25)',
-              color: 'inherit',
-              cursor: 'pointer'
-            }}
-          >
-            Send
-          </button>
+        {/* chat */}
+        <div
+          ref={listRef}
+          className="rounded-xl bg-neutral-900/60 border border-white/10 p-4 h-[56vh] overflow-y-auto"
+        >
+          {messages.map((m, i) => (
+            <Bubble key={i} role={m.role}>{m.content}</Bubble>
+          ))}
+          {loading && <Bubble role="assistant">Thinking…</Bubble>}
         </div>
-      </div>
+
+        {/* input */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            ask();
+          }}
+          className="sticky bottom-4 mt-4"
+        >
+          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-neutral-900 px-3 py-2">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type your question…"
+              className="w-full bg-transparent text-sm outline-none placeholder:text-neutral-500"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-60"
+            >
+              Send
+            </button>
+          </div>
+        </form>
+
+        <footer className="py-6 text-center text-xs text-neutral-500">
+          © {new Date().getFullYear()} Ridha Mahmood
+        </footer>
+      </main>
     </div>
   );
 }
