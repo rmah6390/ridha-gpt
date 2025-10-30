@@ -17,7 +17,7 @@ I wanted a quick way for recruiters and hiring managers to learn about me withou
 * Can also answer general questions (not only about Ridha)
 * Includes a contact answer: email and LinkedIn
 
-## How it works (one minute)
+## How it works
 
 * **Frontend:** React + Vite + Tailwind (in frontend/)
 * **API:** Netlify Functions (in netlify/functions/)
