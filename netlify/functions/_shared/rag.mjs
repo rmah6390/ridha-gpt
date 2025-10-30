@@ -2,15 +2,15 @@ import fs from "fs/promises";
 import path from "path";
 import OpenAI from "openai";
 
-/* Third-person, she/her; no markdown; ≤4 sentences unless asked for more */
+/* Third-person, she/her; plain sentences; ≤4 by default; contact ready */
 export const SYSTEM_PROMPT =
   "You are a professional assistant representing the candidate Ridha Mahmood. " +
-  "Use she/her pronouns. Answer in third person (e.g., 'Ridha's skills include …'). " +
-  "Do not mention or hint at any sources. " +
-  "Write naturally in plain sentences, no markdown, no asterisks. " +
+  "Use she/her pronouns and write in third person (e.g., 'Ridha's skills include …'). " +
+  "Do not mention or hint at any sources. Write naturally in plain sentences, no markdown and no asterisks. " +
   "Keep answers concise—no more than 4 sentences unless the user explicitly asks for more. " +
+  "If the user asks how to contact Ridha or similar, provide her email and LinkedIn exactly as found in the Profile Context. " +
   "If a specific fact about Ridha is not in the context, respond briefly without speculating. " +
-  "If the user asks a general question, ignore the context and answer normally in a friendly tone.";
+  "For general (non-Ridha) questions, ignore the context and answer normally in a friendly tone.";
 
 const RESUME_PATHS = [
   path.join(process.cwd(), "frontend", "src", "data", "resume.json"),
@@ -39,13 +39,32 @@ function asArray(x) { return Array.isArray(x) ? x : x == null ? [] : [x]; }
 
 function chunkResume(data) {
   const chunks = [];
+
+  // Summary
   if (data.summary) chunks.push({ id: "summary", text: `Summary: ${data.summary}` });
 
-  const skills = (data.technical_skills && data.technical_skills.programming_languages) || data.skills || [];
+  // Target roles
+  if (Array.isArray(data.target_roles) && data.target_roles.length) {
+    chunks.push({ id: "targets", text: `Target roles: ${data.target_roles.join(", ")}` });
+  }
+
+  // Contact — include explicit lines the model can quote
+  if (data.contact && (data.contact.email || data.contact.linkedin)) {
+    const lines = [];
+    if (data.contact.email)   lines.push(`Email: ${data.contact.email}`);
+    if (data.contact.linkedin) lines.push(`LinkedIn: ${data.contact.linkedin}`);
+    chunks.push({ id: "contact", text: lines.join(" | ") });
+  }
+
+  // Skills
+  const skills =
+    (data.technical_skills && data.technical_skills.programming_languages) ||
+    data.skills || [];
   if (Array.isArray(skills) && skills.length) {
     chunks.push({ id: "skills", text: `Skills: ${skills.join(", ")}` });
   }
 
+  // Experience
   for (const [i, job] of asArray(data.experience).entries()) {
     const header = [
       `Experience: ${job.role ?? ""} at ${job.company ?? ""}`.trim(),
@@ -62,6 +81,7 @@ function chunkResume(data) {
     }
   }
 
+  // Projects
   for (const [i, proj] of asArray(data.projects).entries()) {
     const base = [`Project: ${proj.name ?? ""}`.trim()];
     if (proj.desc) base.push(proj.desc);
@@ -75,6 +95,7 @@ function chunkResume(data) {
     }
   }
 
+  // Education
   for (const [i, edu] of asArray(data.education).entries()) {
     const line = [
       `Education: ${edu.degree ?? ""}`.trim(),
@@ -82,10 +103,6 @@ function chunkResume(data) {
       edu.expected_graduation ?? edu.year
     ].filter(Boolean).join(" — ");
     if (line) chunks.push({ id: `edu-${i}`, text: line });
-  }
-
-  if (Array.isArray(data.target_roles) && data.target_roles.length) {
-    chunks.push({ id: "targets", text: `Target roles: ${data.target_roles.join(", ")}` });
   }
 
   return chunks;
