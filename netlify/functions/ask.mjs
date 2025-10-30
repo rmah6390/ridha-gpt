@@ -1,7 +1,16 @@
 import { SYSTEM_PROMPT, openai, buildContext } from "./_shared/rag.mjs";
 
+// Strip any stray markdown and normalize pronouns to she/her just in case
 function clean(s) {
-  return String(s || "").replace(/\*\*/g, "").replace(/\*/g, "").replace(/`/g, "").trim();
+  return String(s || "")
+    .replace(/\*\*/g, "")
+    .replace(/\*/g, "")
+    .replace(/`/g, "")
+    .replace(/\bHe\b/g, "She")
+    .replace(/\bhe\b/g, "she")
+    .replace(/\bHis\b/g, "Her")
+    .replace(/\bhis\b/g, "her")
+    .trim();
 }
 
 function json(statusCode, body) {
