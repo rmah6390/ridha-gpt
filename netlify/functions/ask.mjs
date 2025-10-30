@@ -1,12 +1,7 @@
 import { SYSTEM_PROMPT, openai, buildContext } from "./_shared/rag.mjs";
 
-// light post-processing: strip asterisks/backticks just in case
 function clean(s) {
-  return String(s || "")
-    .replace(/\*\*/g, "")
-    .replace(/\*/g, "")
-    .replace(/`/g, "")
-    .trim();
+  return String(s || "").replace(/\*\*/g, "").replace(/\*/g, "").replace(/`/g, "").trim();
 }
 
 function json(statusCode, body) {
