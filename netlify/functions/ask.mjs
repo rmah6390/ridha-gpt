@@ -1,4 +1,4 @@
-import { SYSTEM_PROMPT, openai, buildContext } from "./_shared/rag.js";
+import { SYSTEM_PROMPT, openai, buildContext } from "./_shared/rag.mjs";
 
 // light post-processing: strip asterisks/backticks just in case
 function clean(s) {
