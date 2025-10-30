@@ -1,16 +1,29 @@
+// netlify/functions/_shared/rag.js
 import fs from "fs/promises";
 import path from "path";
 import OpenAI from "openai";
 
+/* --- NEW SYSTEM PROMPT (third-person, no resume mentions, auto-route) --- */
 export const SYSTEM_PROMPT =
-  `You are Ridha-GPT, a personal assistant that answers only using the provided resume context. ` +
-  `Always respond in complete sentences. If the resume does not contain the answer, say: ` +
-  `"I cannot confirm this from my resume."`;
+  "You are a professional assistant for the candidate Ridha Mahmood. " +
+  "When the user is asking about Ridha (including when they speak in first person), " +
+  "answer in third person, recruiter-friendly prose (e.g., “Ridha’s skills include …”). " +
+  "Use the Profile Context as the source of truth when the question is about Ridha. " +
+  "Do not mention or hint at where the information came from. " +
+  "Write clear, complete sentences. " +
+  "If the question is NOT about Ridha (general knowledge), ignore the context and answer normally. " +
+  "If specific information about Ridha is not in the context, answer concisely without speculating, " +
+  "but do not mention any lack of data source.";
 
 const RESUME_PATHS = [
   path.join(process.cwd(), "frontend", "src", "data", "resume.json"),
-  path.join(process.cwd(), "src", "data", "resume.json")
+  path.join(process.cwd(), "src", "data", "resume.json"),
 ];
+
+let _resumeCache = null;
+let _embeddedChunksPromise = null;
+
+export const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 async function resolveResumePath() {
   for (const p of RESUME_PATHS) {
@@ -18,11 +31,6 @@ async function resolveResumePath() {
   }
   return RESUME_PATHS[0];
 }
-
-let _resumeCache = null;
-let _embeddedChunksPromise = null;
-
-export const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 async function loadResume() {
   if (_resumeCache) return _resumeCache;
@@ -126,4 +134,3 @@ export async function buildContext(question, topK = 6) {
 
   return { context: scored.map(c => `- ${c.text}`).join("\n"), scoredChunks: scored };
 }
-
