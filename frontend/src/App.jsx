@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 const SUGGESTIONS = [
   "Give me a brief summary of Ridha.",
   "What are Ridha’s strongest technical skills?",
-  "What are Ridha’s top 3 projects and what did he do on each?",
+  "What are Ridha’s top 3 projects and what did she do on each?",
   "What roles is Ridha targeting next?",
 ];
 
