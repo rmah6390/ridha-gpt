@@ -68,7 +68,7 @@ export default function App() {
           <div>
             <h1 className="text-lg font-semibold">Ridha‑GPT</h1>
             <p className="text-xs text-neutral-400">
-              A Personal Ai Assistant about Ridha Mahmood.
+              A Personal AI Assistant about Ridha Mahmood.
             </p>
           </div>
         </div>
