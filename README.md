@@ -49,8 +49,8 @@ I wanted a quick way for recruiters and hiring managers to learn about me withou
 
 ## Contact
 
-If you see something off or want to connect:
-**Email:** [rmah6390@gmail.com](mailto:rmah6390@gmail.com)
+If you want to connect:                                                                                                                            
+**Email:** [rmah6390@gmail.com](mailto:rmah6390@gmail.com)                                                                                
 **LinkedIn:** [https://www.linkedin.com/in/ridha-mahmood](https://www.linkedin.com/in/ridha-mahmood)
 
 ---
