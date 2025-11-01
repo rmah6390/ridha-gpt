@@ -69,8 +69,9 @@
     {
       "name": "AI Accessibility Website",
       "details": [
-        "Improved accessibility with WCAG 2.1 practices, ARIA semantics, and keyboard-only navigation.",
-        "Used Lighthouse and axe to identify and fix contrast and heading issues."
+        "Designed and deployed a responsive website for low-vision users on Squarespace. implemented
+          keyboard-only navigation, clear headings/labels."
+      
       ]
     }
   ],
