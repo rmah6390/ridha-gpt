@@ -39,6 +39,9 @@ function asArray(x) { return Array.isArray(x) ? x : x == null ? [] : [x]; }
 
 function chunkResume(data) {
   const chunks = [];
+  // add links into the chunked context so the model can include them
+  if (proj.repo) base.push(`Repo: ${proj.repo}`);
+  if (proj.live) base.push(`Live: ${proj.live}`);
 
   // Summary
   if (data.summary) chunks.push({ id: "summary", text: `Summary: ${data.summary}` });
