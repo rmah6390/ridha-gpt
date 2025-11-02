@@ -8,12 +8,15 @@ const SUGGESTIONS = [
 ];
 
 /* Turn URLs in text into clean clickable links:
-   - supports http/https and www.
+   - pre-pass to split any glued '...apphttps://' / '...comhttps://'
    - trims trailing . ) ] , characters that often ride after links
 */
-function linkify(text) {
+function linkify(input) {
+  // NEW: ensure a space before any new https:// if it's glued to the prior token
+  const text = String(input).replace(/([A-Za-z0-9._-])(https?:\/\/)/g, "$1 $2");
+
   const urlRegex = /((https?:\/\/|www\.)[^\s)]+)|(\b[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\/[^\s)]*)/g;
-  const parts = String(text).split(urlRegex);
+  const parts = text.split(urlRegex);
   return parts.map((part, i) => {
     if (!part) return null;
     const looksLikeUrl =
@@ -54,11 +57,7 @@ function Bubble({ role, children }) {
 
 export default function App() {
   const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "Hi! Ask me anything about Ridha’s experience, skills, and projects."
-    }
+    { role: "assistant", content: "Hi! Ask me anything about Ridha’s experience, skills, and projects." }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -84,10 +83,7 @@ export default function App() {
       const answer = data.answer || data.error || "Sorry, I couldn’t answer that.";
       setMessages((m) => [...m, { role: "assistant", content: answer }]);
     } catch {
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", content: "Sorry, something went wrong." }
-      ]);
+      setMessages((m) => [...m, { role: "assistant", content: "Sorry, something went wrong." }]);
     } finally {
       setLoading(false);
     }
@@ -99,13 +95,9 @@ export default function App() {
       <header className="sticky top-0 z-10 backdrop-blur bg-black/30 border-b border-white/10">
         <div className="mx-auto max-w-3xl px-4 py-5 text-center">
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            <span className="px-3 py-1 rounded-lg bg-gradient-to-r from-[#5b21b6] to-[#6d28d9]">
-              Ridha-GPT
-            </span>
+            <span className="px-3 py-1 rounded-lg bg-gradient-to-r from-[#5b21b6] to-[#6d28d9]">Ridha-GPT</span>
           </h1>
-          <p className="mt-2 text-sm text-white/70">
-            Ask about Ridha’s experiences and projects.
-          </p>
+          <p className="mt-2 text-sm text-white/70">Ask about Ridha’s experiences and projects.</p>
         </div>
       </header>
 
@@ -127,10 +119,7 @@ export default function App() {
         </div>
 
         {/* Chat */}
-        <div
-          ref={listRef}
-          className="rounded-xl bg-[#0f1117]/60 border border-white/10 p-4 h-[58vh] overflow-y-auto shadow-xl"
-        >
+        <div ref={listRef} className="rounded-xl bg-[#0f1117]/60 border border-white/10 p-4 h-[58vh] overflow-y-auto shadow-xl">
           {messages.map((m, i) => (
             <Bubble key={i} role={m.role}>
               <div className="whitespace-pre-wrap break-words">{linkify(m.content)}</div>
@@ -140,13 +129,7 @@ export default function App() {
         </div>
 
         {/* Input */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            ask();
-          }}
-          className="sticky bottom-4 mt-4"
-        >
+        <form onSubmit={(e) => { e.preventDefault(); ask(); }} className="sticky bottom-4 mt-4">
           <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#101218] px-3 py-2">
             <input
               value={input}
@@ -154,19 +137,13 @@ export default function App() {
               placeholder="Type your question…"
               className="w-full bg-transparent text-sm outline-none placeholder:text-white/40"
             />
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-lg bg-[#6d28d9] px-4 py-2 text-sm font-semibold hover:opacity-90 disabled:opacity-60"
-            >
+            <button type="submit" disabled={loading} className="rounded-lg bg-[#6d28d9] px-4 py-2 text-sm font-semibold hover:opacity-90 disabled:opacity-60">
               Send
             </button>
           </div>
         </form>
 
-        <footer className="py-6 text-center text-xs text-white/50">
-          © {new Date().getFullYear()} Ridha Mahmood
-        </footer>
+        <footer className="py-6 text-center text-xs text-white/50">© {new Date().getFullYear()} Ridha Mahmood</footer>
       </main>
     </div>
   );
