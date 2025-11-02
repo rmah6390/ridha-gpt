@@ -111,17 +111,19 @@ export default function App() {
 
       {/* Content */}
       <main className="mx-auto max-w-3xl px-4">
-        {/* Suggestions */}
-        <div className="flex flex-wrap gap-2 py-4">
-          {SUGGESTIONS.map((s) => (
-            <button
-              key={s}
-              onClick={() => ask(s)}
-              className="rounded-full border border-white/10 bg-[#101218] px-3 py-1.5 text-xs text-white/90 hover:border-violet-500 hover:text-violet-200 transition"
-            >
-              {s}
-            </button>
-          ))}
+        {/* Suggestions (centered) */}
+        <div className="w-full py-4">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {SUGGESTIONS.map((s) => (
+              <button
+                key={s}
+                onClick={() => ask(s)}
+                className="rounded-full border border-white/10 bg-[#101218] px-3 py-1.5 text-xs text-white/90 hover:border-violet-500 hover:text-violet-200 transition"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Chat */}
