@@ -75,18 +75,16 @@
     ],
     "live": "https://learnaiaccessibility.squarespace.com"
   }
-]
-    }
-  ],
-  "education": [
-    {
-      "degree": "B.S. in Computer Science (Minor: Software Engineering)",
-      "school": "George Mason University (GMU)",
-      "expected_graduation": "May 2026"
-    }
-  ],
-  "links": {
-    "github": "https://github.com/rmah6390",
-    "linkedin_full": "https://www.linkedin.com/in/ridha-mahmood"
+],                            
+"education": [
+  {
+    "degree": "B.S. in Computer Science (Minor: Software Engineering)",
+    "school": "George Mason University (GMU)",
+    "expected_graduation": "May 2026"
   }
+],
+"links": {
+  "github": "https://github.com/rmah6390",
+  "linkedin_full": "https://www.linkedin.com/in/ridha-mahmood"
 }
+}                              
