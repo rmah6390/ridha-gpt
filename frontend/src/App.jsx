@@ -41,7 +41,7 @@ function Bubble({ role, children }) {
 export default function App() {
   const [messages, setMessages] = useState([
     { role: "assistant",
-      content: "Hi! Ask anything about Ridha’s experience, skills, and projects." }
+      content: "Hi! Ask me anything about Ridha’s experience, skills, and projects." }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
