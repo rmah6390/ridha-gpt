@@ -4,7 +4,6 @@ const SUGGESTIONS = [
   "Give me a brief summary of Ridha.",
   "What are Ridha’s strongest technical skills?",
   "What projects has Ridha deployed recently?",
-  "Share links to Ridha’s projects."
 ];
 
 /* Turn URLs in text into clean clickable links:
