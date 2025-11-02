@@ -53,29 +53,32 @@
  "projects": [
   {
     "name": "Ridha-GPT (Personal Assistant Website)",
-    "desc": "ChatGPT-style site that answers questions about Ridha in full sentences using retrieval over a structured profile.",
-    "details": [
-      "Frontend built with React, Vite, and Tailwind; backend uses Netlify Functions in JavaScript.",
-      "Uses embeddings to ground answers about Ridha; answers general questions normally via the model."
-    ]
+      "desc": "Chat-style site that answers questions about Ridha in short third-person sentences using retrieval.",
+      "details": [
+        "React, Vite, Tailwind; Netlify Functions (Node.js) + OpenAI API.",
+        "Embeddings over resume.json; cosine similarity ranking; streamed answers."
+      ],
+      "live": "https://ridha-gpts.netlify.app",
+      "repo": "https://github.com/rmah6390/ridha-gpt"
   },
-  {
-    "name": "Python Discord Bot",
-    "details": [
-      "Cog-based bot with !ping, !roll, and per-server TODOs backed by SQLite.",
-      "Added GitHub Actions CI, structured logging, dotenv-managed secrets, and a Dockerfile for reproducible deploys."
-    ],
-    "repo": "https://github.com/rmah6390/discord-bot-python"
-  },
-  {
-    "name": "AI Accessibility Website",
-    "details": [
-      "Designed and deployed a responsive website for low-vision users on Squarespace.",
-      "Implemented keyboard-only navigation with clear headings/labels."
-    ],
-    "live": "https://learnaiaccessibility.squarespace.com"
-  }
-],                            
+   {
+      "name": "Python Discord Bot",
+      "details": [
+        "Cog-based bot with !ping, !roll, per-server TODOs (SQLite).",
+        "dotenv for token, GitHub Actions CI, PyTest, Docker."
+      ],
+      "repo": "https://github.com/rmah6390/discord-bot-python"
+    },
+    {
+      "name": "AI Accessibility Website",
+      "details": [
+        "Designed and deployed a responsive website for low-vision users.",
+        "Keyboard-only navigation, clear headings/labels."
+      ],
+      "live": "https://learnaiaccessibility.squarespace.com"
+    }
+  ]
+}
 "education": [
   {
     "degree": "B.S. in Computer Science (Minor: Software Engineering)",
