@@ -3,18 +3,35 @@ import { useEffect, useRef, useState } from "react";
 const SUGGESTIONS = [
   "Give me a brief summary of Ridha.",
   "What are Ridha’s strongest technical skills?",
-  "What are Ridha’s top 3 projects and what did she do on each?",
-  "What roles is Ridha targeting next?",
+  "What projects has Ridha shipped recently?",
+  "Share links to Ridha’s projects."
 ];
+
+function linkify(text) {
+  const urlRegex = /((https?:\/\/|www\.)[^\s)]+)|(\b[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\/[^\s)]*)/g;
+  const parts = String(text).split(urlRegex);
+  return parts.map((part, i) => {
+    if (!part) return null;
+    const looksLikeUrl = /^(https?:\/\/|www\.)|(\.[a-z]{2,}\/)/i.test(part);
+    if (!looksLikeUrl) return <span key={i}>{part}</span>;
+    const href = part.startsWith("http") ? part : `https://${part}`;
+    return (
+      <a key={i} href={href} target="_blank" rel="noreferrer"
+         className="underline decoration-violet-600 underline-offset-4 hover:text-violet-300">
+        {part}
+      </a>
+    );
+  });
+}
 
 function Bubble({ role, children }) {
   const isUser = role === "user";
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-3`}>
-      <div
-        className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-6 shadow
-          ${isUser ? "bg-violet-600 text-white" : "bg-neutral-800 text-neutral-100"}`}
-      >
+      <div className={[
+        "max-w-[85%] rounded-2xl px-4 py-3 text-[0.95rem] leading-6 shadow-lg",
+        isUser ? "bg-violet-600 text-white" : "bg-[#101218] border border-white/10"
+      ].join(" ")}>
         {children}
       </div>
     </div>
@@ -23,11 +40,8 @@ function Bubble({ role, children }) {
 
 export default function App() {
   const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "Hi, ask me anything about Ridha’s experience, projects, and skills."
-    }
+    { role: "assistant",
+      content: "Hi! Ask anything about Ridha’s experience, skills, and projects. I answer in short, natural, third-person sentences." }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -41,9 +55,8 @@ export default function App() {
     const question = q ?? input.trim();
     if (!question) return;
     setInput("");
-    setMessages((m) => [...m, { role: "user", content: question }]);
+    setMessages(m => [...m, { role: "user", content: question }]);
     setLoading(true);
-
     try {
       const res = await fetch("/api/ask", {
         method: "POST",
@@ -52,81 +65,55 @@ export default function App() {
       });
       const data = await res.json();
       const answer = data.answer || data.error || "Sorry, I couldn’t answer that.";
-      setMessages((m) => [...m, { role: "assistant", content: answer }]);
+      setMessages(m => [...m, { role: "assistant", content: answer }]);
     } catch {
-      setMessages((m) => [...m, { role: "assistant", content: "Sorry, something went wrong." }]);
-    } finally {
-      setLoading(false);
-    }
+      setMessages(m => [...m, { role: "assistant", content: "Sorry, something went wrong." }]);
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0b10] text-neutral-100">
-      <header className="sticky top-0 z-10 border-b border-white/10 backdrop-blur bg-[#0b0b10]/80">
-        <div className="mx-auto max-w-3xl px-4 py-4 flex items-center gap-3">
-          <div className="h-8 w-8 rounded-md bg-violet-600 grid place-items-center font-semibold">R</div>
-          <div>
-            <h1 className="text-lg font-semibold">Ridha‑GPT</h1>
-            <p className="text-xs text-neutral-400">
-              A Personal AI Assistant about Ridha Mahmood.
-            </p>
-          </div>
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-10 backdrop-blur bg-black/30 border-b border-white/10">
+        <div className="mx-auto max-w-3xl px-4 py-5 text-center">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            <span className="px-3 py-1 rounded-lg bg-gradient-to-r from-[#5b21b6] to-[#6d28d9]">Ridha-GPT</span>
+          </h1>
+          <p className="mt-2 text-sm text-white/70">Short, recruiter-friendly answers about Ridha’s background and projects.</p>
         </div>
       </header>
 
       <main className="mx-auto max-w-3xl px-4">
-        {/* suggestions */}
         <div className="flex flex-wrap gap-2 py-4">
-          {SUGGESTIONS.map((s) => (
-            <button
-              key={s}
-              onClick={() => ask(s)}
-              className="rounded-full border border-white/10 bg-neutral-900 px-3 py-1.5 text-xs text-neutral-200 hover:border-violet-500 hover:text-violet-200 transition"
-            >
+          {SUGGESTIONS.map(s => (
+            <button key={s} onClick={() => ask(s)}
+              className="rounded-full border border-white/10 bg-[#101218] px-3 py-1.5 text-xs text-white/90 hover:border-violet-500 hover:text-violet-200 transition">
               {s}
             </button>
           ))}
         </div>
 
-        {/* chat */}
-        <div
-          ref={listRef}
-          className="rounded-xl bg-neutral-900/60 border border-white/10 p-4 h-[56vh] overflow-y-auto"
-        >
+        <div ref={listRef} className="rounded-xl bg-[#0f1117]/60 border border-white/10 p-4 h-[58vh] overflow-y-auto shadow-xl">
           {messages.map((m, i) => (
-            <Bubble key={i} role={m.role}>{m.content}</Bubble>
+            <Bubble key={i} role={m.role}>
+              <div className="whitespace-pre-wrap break-words">{linkify(m.content)}</div>
+            </Bubble>
           ))}
           {loading && <Bubble role="assistant">Thinking…</Bubble>}
         </div>
 
-        {/* input */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            ask();
-          }}
-          className="sticky bottom-4 mt-4"
-        >
-          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-neutral-900 px-3 py-2">
+        <form onSubmit={(e) => { e.preventDefault(); ask(); }} className="sticky bottom-4 mt-4">
+          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#101218] px-3 py-2">
             <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your question…"
-              className="w-full bg-transparent text-sm outline-none placeholder:text-neutral-500"
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-60"
-            >
+              value={input} onChange={e => setInput(e.target.value)}
+              placeholder="Type your question…" className="w-full bg-transparent text-sm outline-none placeholder:text-white/40" />
+            <button type="submit" disabled={loading}
+              className="rounded-lg bg-[#6d28d9] px-4 py-2 text-sm font-semibold hover:opacity-90 disabled:opacity-60">
               Send
             </button>
           </div>
         </form>
 
-        <footer className="py-6 text-center text-xs text-neutral-500">
-          © {new Date().getFullYear()} Ridha Mahmood
-        </footer>
+        <footer className="py-6 text-center text-xs text-white/50">© {new Date().getFullYear()} Ridha Mahmood</footer>
       </main>
     </div>
   );
