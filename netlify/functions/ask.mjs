@@ -13,23 +13,18 @@ function cleanAndSanitize(s) {
     .replace(/\bhis\b/g, "her")
 
     // --- URL fixes ---
-    // If a new URL was glued directly after a URL, insert a space:
-    // e.g., "…netlify.apphttps://…" -> "…netlify.app https://…"
-    .replace(/([^ \t\r\n])(https?:\/\/)/g, "$1 $2")
-
-    // Fix the specific ".https://" join
+    // If a new URL was glued directly after a URL, insert a space
+    .replace(/([A-Za-z0-9._-])(https?:\/\/)/g, "$1 $2")
+    // handle the ".https://" join
     .replace(/\.https:\/\//g, ". https://")
-
-    // Collapse accidental spaces after scheme
+    // collapse accidental spaces after scheme
     .replace(/https:\/\/\s+/g, "https://")
-
-    // Remove trailing punctuation from URLs inside sentences
+    // remove trailing punctuation from URLs
     .replace(/(https?:\/\/[^\s)]+)[\.)]+(?=\s|$)/g, "$1")
-
-    // Remove any 'no specific links provided...' line if the model added it
+    // remove any 'no specific links provided...' line if generated
     .replace(/no specific links provided.*$/i, "");
 
-  // collapse double spaces that may have been introduced
+  // collapse double spaces introduced by the fixes
   out = out.replace(/\s{2,}/g, " ").trim();
   return out;
 }
@@ -60,10 +55,7 @@ export const handler = async (event) => {
       temperature: 0.25,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: `Profile Context:\n${context || "(none)"}\n\nUser Question:\n${question}`
-        }
+        { role: "user", content: `Profile Context:\n${context || "(none)"}\n\nUser Question:\n${question}` }
       ]
     });
 
@@ -72,9 +64,7 @@ export const handler = async (event) => {
     return json(200, { answer });
   } catch (err) {
     console.error("ask error:", err);
-    const msg = process.env.OPENAI_API_KEY
-      ? `Internal error: ${err.message || String(err)}`
-      : "Missing OPENAI_API_KEY";
+    const msg = process.env.OPENAI_API_KEY ? `Internal error: ${err.message || String(err)}` : "Missing OPENAI_API_KEY";
     return json(500, { error: msg });
   }
 };
