@@ -3,23 +3,35 @@ import { SYSTEM_PROMPT, openai, buildContext } from "./_shared/rag.mjs";
 // Strip stray markdown, normalize pronouns, and sanitize URL formatting
 function cleanAndSanitize(s) {
   let out = String(s || "")
+    // remove simple markdown + normalize pronouns
     .replace(/\*\*/g, "")
     .replace(/\*/g, "")
     .replace(/`/g, "")
     .replace(/\bHe\b/g, "She")
     .replace(/\bhe\b/g, "she")
     .replace(/\bHis\b/g, "Her")
-    .replace(/\bhis\b/g, "her");
+    .replace(/\bhis\b/g, "her")
 
-  // Fix edge cases like ".https://", collapsed spaces, trailing punctuation on URLs,
-  // and remove any "no specific links provided" phrasing.
-  out = out
+    // --- URL fixes ---
+    // If a new URL was glued directly after a URL, insert a space:
+    // e.g., "…netlify.apphttps://…" -> "…netlify.app https://…"
+    .replace(/([^ \t\r\n])(https?:\/\/)/g, "$1 $2")
+
+    // Fix the specific ".https://" join
     .replace(/\.https:\/\//g, ". https://")
+
+    // Collapse accidental spaces after scheme
     .replace(/https:\/\/\s+/g, "https://")
+
+    // Remove trailing punctuation from URLs inside sentences
     .replace(/(https?:\/\/[^\s)]+)[\.)]+(?=\s|$)/g, "$1")
+
+    // Remove any 'no specific links provided...' line if the model added it
     .replace(/no specific links provided.*$/i, "");
 
-  return out.trim();
+  // collapse double spaces that may have been introduced
+  out = out.replace(/\s{2,}/g, " ").trim();
+  return out;
 }
 
 function json(statusCode, body) {
