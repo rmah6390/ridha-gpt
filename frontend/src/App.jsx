@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 const SUGGESTIONS = [
   "Give me a brief summary of Ridha.",
   "What are Ridha’s strongest technical skills?",
-  "What projects has Ridha shipped recently?",
+  "What projects has Ridha deployed recently?",
   "Share links to Ridha’s projects."
 ];
 
@@ -78,7 +78,7 @@ export default function App() {
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
             <span className="px-3 py-1 rounded-lg bg-gradient-to-r from-[#5b21b6] to-[#6d28d9]">Ridha-GPT</span>
           </h1>
-          <p className="mt-2 text-sm text-white/70">Short, recruiter-friendly answers about Ridha’s background and projects.</p>
+          <p className="mt-2 text-sm text-white/70">Ask about Ridha’s experiences and projects.</p>
         </div>
       </header>
 
