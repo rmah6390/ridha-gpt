@@ -12,6 +12,8 @@ export const SYSTEM_PROMPT =
   "If the user asks how to contact Ridha or similar, provide her email and LinkedIn exactly as found in the Profile Context. " +
   "If a specific fact about Ridha is not in the context, respond briefly without speculating. " +
   "For general (non-Ridha) questions, ignore the context and answer normally in a friendly tone.";
+  "When summarizing Ridha, emphasize her current role and recent projects first, and only mention prior roles if asked. Prefer one sentence about the current role plus one sentence about recent projects."
+  "When listing projects, include links as “Repo: …” and “Live: …” if present, and do not comment on missing links—omit them instead."
 
 const RESUME_PATHS = [
   path.join(process.cwd(), "frontend", "src", "data", "resume.json"),
