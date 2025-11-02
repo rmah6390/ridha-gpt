@@ -1,3 +1,4 @@
+// netlify/functions/_shared/rag.mjs
 import fs from "fs/promises";
 import path from "path";
 import OpenAI from "openai";
@@ -14,7 +15,7 @@ export const SYSTEM_PROMPT =
 
 const RESUME_PATHS = [
   path.join(process.cwd(), "frontend", "src", "data", "resume.json"),
-  path.join(process.cwd(), "src", "data", "resume.json")
+  path.join(process.cwd(), "src", "data", "resume.json"),
 ];
 
 let _resumeCache = null;
@@ -23,15 +24,23 @@ let _embeddedChunksPromise = null;
 export const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 async function resolveResumePath() {
-  for (const p of RESUME_PATHS) { try { await fs.access(p); return p; } catch {} }
+  for (const p of RESUME_PATHS) {
+    try { await fs.access(p); return p; } catch {}
+  }
   return RESUME_PATHS[0];
 }
 
 async function loadResume() {
   if (_resumeCache) return _resumeCache;
   const p = await resolveResumePath();
-  const raw = await fs.readFile(p, "utf-8");
-  _resumeCache = JSON.parse(raw);
+  let raw;
+  try {
+    raw = await fs.readFile(p, "utf-8");
+    _resumeCache = JSON.parse(raw);
+  } catch (e) {
+    console.error("resume.json parse error:", e.message);
+    throw new Error("Profile JSON is invalid. Fix resume.json (check commas/quotes/newlines).");
+  }
   return _resumeCache;
 }
 
@@ -39,9 +48,6 @@ function asArray(x) { return Array.isArray(x) ? x : x == null ? [] : [x]; }
 
 function chunkResume(data) {
   const chunks = [];
-  // add links into the chunked context so the model can include them
-  if (proj.repo) base.push(`Repo: ${proj.repo}`);
-  if (proj.live) base.push(`Live: ${proj.live}`);
 
   // Summary
   if (data.summary) chunks.push({ id: "summary", text: `Summary: ${data.summary}` });
@@ -51,12 +57,14 @@ function chunkResume(data) {
     chunks.push({ id: "targets", text: `Target roles: ${data.target_roles.join(", ")}` });
   }
 
-  // Contact — include explicit lines the model can quote
-  if (data.contact && (data.contact.email || data.contact.linkedin)) {
+  // Contact — allow either data.contact or links.linkedin_full shape
+  if (data.contact?.email || data.contact?.linkedin || data.links?.linkedin_full) {
     const lines = [];
-    if (data.contact.email)   lines.push(`Email: ${data.contact.email}`);
-    if (data.contact.linkedin) lines.push(`LinkedIn: ${data.contact.linkedin}`);
-    chunks.push({ id: "contact", text: lines.join(" | ") });
+    if (data.contact?.email) lines.push(`Email: ${data.contact.email}`);
+    // prefer explicit contact.linkedin, else links.linkedin_full
+    const li = data.contact?.linkedin || data.links?.linkedin_full;
+    if (li) lines.push(`LinkedIn: ${li}`);
+    if (lines.length) chunks.push({ id: "contact", text: lines.join(" | ") });
   }
 
   // Skills
@@ -74,6 +82,7 @@ function chunkResume(data) {
       [job.start, job.end].filter(Boolean).join(" – "),
       job.location
     ].filter(Boolean).join("\n");
+
     const bullets = asArray(job.bullets);
     if (bullets.length) {
       for (const [j, b] of bullets.entries()) {
@@ -84,11 +93,18 @@ function chunkResume(data) {
     }
   }
 
-  // Projects
+  // Projects (include repo/live so the model can surface links)
   for (const [i, proj] of asArray(data.projects).entries()) {
     const base = [`Project: ${proj.name ?? ""}`.trim()];
     if (proj.desc) base.push(proj.desc);
-    const details = asArray(proj.details).length ? asArray(proj.details) : asArray(proj.highlights);
+
+    if (proj.repo) base.push(`Repo: ${proj.repo}`);
+    if (proj.live) base.push(`Live: ${proj.live}`);
+
+    const details = Array.isArray(proj.details) && proj.details.length
+      ? proj.details
+      : (Array.isArray(proj.highlights) ? proj.highlights : []);
+
     if (details.length) {
       for (const [j, d] of details.entries()) {
         chunks.push({ id: `proj-${i}-${j}`, text: `${base.join("\n")}\n• ${d}`.trim() });
