@@ -56,7 +56,7 @@
       "desc": "ChatGPT-style site that answers questions about Ridha in full sentences using retrieval over a structured profile.",
       "details": [
         "Frontend built with React, Vite, and Tailwind; backend uses Netlify Functions in JavaScript.",
-        "Uses embeddings to ground answers about Ridha; answers general questions normally via the model."
+        "Uses embeddings to ground answers about Ridha; answers general questions normally via the model.
       ]
     },
     {
@@ -64,6 +64,7 @@
       "details": [
         "Cog-based bot with !ping, !roll, and per-server TODOs backed by SQLite.",
         "Added GitHub Actions CI, structured logging, dotenv-managed secrets, and a Dockerfile for reproducible deploys."
+      "repo": "https://github.com/rmah6390/discord-bot-python"
       ]
     },
     {
@@ -71,6 +72,7 @@
       "details": [
         "Designed and deployed a responsive website for low-vision users on Squarespace."
         "Implemented keyboard only navigation with clear headings/labels."
+        "live": "https://learnaiaccessibility.squarespace.com"
       ]
     }
   ],
