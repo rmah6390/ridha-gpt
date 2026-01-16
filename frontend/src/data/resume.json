@@ -32,21 +32,21 @@
       "start": "Mar 2022",
       "end": "Present",
       "bullets": [
-        "Maintained Microsoft Power Automate workflows for invoice intake and approvals, reducing manual touches.",
-        "Integrated Microsoft Dynamics NAV and Excel validation to remove duplicates and surface exceptions.",
-        "Operated VM-based processing jobs and wrote runbooks/failover steps to keep workflows reliable during peak volume."
+        "Assisted and maintained Microsoft Power Automate workflows for invoice intake/approvals, automating multi-step routing and current exception handling, reducing manual touches by 50%.",
+        "Validated invoice data in Microsoft Dynamics NAV and Excel to improve reconciliation accuracy and reporting quality.",
+        "Identified processing issues and improved workflows to reduce delays and strengthen data quality."
       ]
     },
     {
       "company": "SyncData.ai",
       "role": "AI Analyst Intern (CCI Scholar Program)",
       "location": "Remote",
-      "start": "Dec 2025",
-      "end": "Present",
+      "start": "Nov 2025",
+      "end": "Jan 2026",
       "bullets": [
-        "Selected as a 2025-2026 Commonwealth Cyber Initiative (CCI) Scholar and placed at SyncData.ai for AI-driven cybersecurity and compliance work.",
-        "Supported the team with Python scripting and simple data tasks to prototype and improve internal AI and automation workflows.",
-        "Built familiarity with key cybersecurity and compliance frameworks to help map controls into technical implementation tasks."
+        "Selected as a Commonwealth Cyber Initiative (CCI) Scholar for a competitive winter internship placement.",
+        "Supported frontend development for the Fisherman product, improving data risk review workflows (ingestion tracking, sensitivity indicators, severity visibility).",
+        "Completed Python scripting and internal automation tasks and supported compliance documentation aligned with NIST, ISO 27001, and SOC 2."
       ]
     },
     {
@@ -94,7 +94,7 @@
     {
       "degree": "B.S. in Computer Science (Minor: Software Engineering)",
       "school": "George Mason University (GMU)",
-      "expected_graduation": "May 2026"
+      "expected_graduation": "December 2026"
     }
   ],
   "links": {
